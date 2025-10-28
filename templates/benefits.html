@@ -1,6 +1,7 @@
 {% extends 'base.html' %}
 {% block content %}
 <h2>Benefits of Boxing</h2>
+
 <ul>
     <li>Improves cardiovascular health and endurance</li>
     <li>Enhances coordination, balance, and agility</li>
@@ -9,7 +10,11 @@
     <li>Reduces stress and improves focus</li>
 </ul>
 
-<img src="https://images.unsplash.com/photo-1574738171041-395c3f47a06a" class="hero" alt="Boxing workout">
+<!-- ✅ Your local image here -->
+<img src="{{ url_for('static', filename='images/benefits_image.jpg') }}"
+     class="hero benefits-img"
+     alt="Boxer training illustration">
 
-<p>Boxing is not just for fighters — it’s for anyone seeking strength, focus, and transformation. Train your body, empower your mind, and step into the <strong>Fight Zone</strong>.</p>
+<p>Boxing is not just for fighters — it’s for anyone seeking strength, focus, and transformation.
+Train your body, empower your mind, and step into the <strong>Fight Zone</strong>.</p>
 {% endblock %}

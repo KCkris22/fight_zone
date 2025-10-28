@@ -1,4 +1,7 @@
 from flask import Flask, render_template
+import os
+print(os.path.exists('static/images/home_image.jpg'))
+
 
 app = Flask(__name__)
 
