@@ -4,16 +4,18 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="eb5be50a-3657-4e04-b061-60d743bb1216" name="Changes" comment="Commit">
-      <change afterPath="$PROJECT_DIR$/static/images/about_image.jpg" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/static/images/benefits_image.jpg" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/static/images/home_image.png" afterDir="false" />
+    <list default="true" id="eb5be50a-3657-4e04-b061-60d743bb1216" name="Changes" comment="">
+      <change afterPath="$PROJECT_DIR$/static/images/about_image.png" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/app.py" beforeDir="false" afterPath="$PROJECT_DIR$/app.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/static/style.css" beforeDir="false" afterPath="$PROJECT_DIR$/static/style.css" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/templates/about.html" beforeDir="false" afterPath="$PROJECT_DIR$/templates/about.html" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/templates/benefits.html" beforeDir="false" afterPath="$PROJECT_DIR$/templates/benefits.html" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/templates/index.html" beforeDir="false" afterPath="$PROJECT_DIR$/templates/index.html" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/static/images/about_image.jpg" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/static/images/benefits_image.jpg" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/static/images/home_image.png" beforeDir="false" afterPath="$PROJECT_DIR$/static/images/home_image.png" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/static/style.css" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/templates/about.html" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/templates/base.html" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/templates/benefits.html" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/templates/index.html" beforeDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -60,7 +62,7 @@
     &quot;RunOnceActivity.ShowReadmeOnStart&quot;: &quot;true&quot;,
     &quot;RunOnceActivity.TerminalTabsStorage.copyFrom.TerminalArrangementManager.252&quot;: &quot;true&quot;,
     &quot;RunOnceActivity.git.unshallow&quot;: &quot;true&quot;,
-    &quot;git-widget-placeholder&quot;: &quot;master&quot;,
+    &quot;git-widget-placeholder&quot;: &quot;#2 on cynrics&quot;,
     &quot;last_opened_file_path&quot;: &quot;C:/Users/CYNRIC/PycharmProjects/fight_zone/static/images&quot;
   }
 }</component>
@@ -124,7 +126,15 @@
       <option name="project" value="LOCAL" />
       <updated>1761205753215</updated>
     </task>
-    <option name="localTasksCounter" value="2" />
+    <task id="LOCAL-00002" summary="Commit">
+      <option name="closed" value="true" />
+      <created>1761630951678</created>
+      <option name="number" value="00002" />
+      <option name="presentableId" value="LOCAL-00002" />
+      <option name="project" value="LOCAL" />
+      <updated>1761630951678</updated>
+    </task>
+    <option name="localTasksCounter" value="3" />
     <servers />
   </component>
   <component name="VcsManagerConfiguration">
