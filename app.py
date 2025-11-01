@@ -315,6 +315,6 @@ def membership():
 """
     return page_html("Membership", body)
 
-# ---------- RUN ----------
+# --------- RUN ---------
 if __name__ == "__main__":
     app.run(debug=True)
