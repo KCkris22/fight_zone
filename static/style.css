@@ -1,77 +1,146 @@
+/* ===== FIGHT ZONE THEME ===== */
 body {
-    font-family: Arial, sans-serif;
-    background-color: #111;
+    background-color: #000;
     color: #fff;
+    font-family: 'Poppins', sans-serif;
     margin: 0;
+    padding: 0;
 }
 
 header {
     background-color: #b71c1c;
-    padding: 15px 20px;
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
+    text-align: center;
+    padding: 20px 0;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.7);
 }
 
 header h1 {
-    margin: 0;
+    color: white;
+    font-size: 2rem;
+    letter-spacing: 2px;
+    text-transform: uppercase;
 }
 
-header nav a {
-    color: #fff;
-    margin-left: 15px;
-    text-decoration: none;
-}
-
-.content {
-    padding: 20px;
+footer {
+    text-align: center;
+    background-color: #111;
+    padding: 15px;
+    color: #aaa;
+    position: fixed;
+    bottom: 0;
+    width: 100%;
+    font-size: 14px;
 }
 
 .form-container {
-    max-width: 400px;
-    margin: 50px auto;
-    background-color: #222;
-    padding: 20px;
-    border-radius: 10px;
+    width: 350px;
+    margin: 120px auto;
+    background-color: #111;
+    padding: 30px;
+    border-radius: 15px;
+    box-shadow: 0 0 15px rgba(255, 0, 0, 0.4);
+    text-align: center;
 }
 
-.form-container input {
-    width: 100%;
+.form-container h2 {
+    margin-bottom: 20px;
+    color: #ff4444;
+    font-size: 1.5rem;
+}
+
+input {
+    display: block;
+    width: 90%;
+    margin: 10px auto;
     padding: 10px;
-    margin: 10px 0;
-    border: none;
+    border: 1px solid #ff4444;
     border-radius: 5px;
+    background-color: #222;
+    color: white;
+    font-size: 14px;
 }
 
-.form-container button {
-    width: 100%;
-    padding: 10px;
+input:focus {
+    outline: none;
+    border-color: #ff0000;
+    box-shadow: 0 0 10px rgba(255, 0, 0, 0.4);
+}
+
+button {
+    width: 95%;
     background-color: #b71c1c;
     color: #fff;
     border: none;
+    padding: 10px;
+    font-size: 15px;
+    border-radius: 5px;
+    cursor: pointer;
+    margin-top: 10px;
+}
+
+button:hover {
+    background-color: #ff0000;
+    transition: 0.3s ease;
+}
+
+a {
+    color: #ff4444;
+    text-decoration: none;
+}
+
+a:hover {
+    text-decoration: underline;
+}
+
+/* Popup styling */
+.popup {
+    display: none;
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.8);
+    justify-content: center;
+    align-items: center;
+    z-index: 1000;
+}
+
+.popup-content {
+    background: #b71c1c;
+    color: #fff;
+    padding: 20px 30px;
+    border-radius: 10px;
+    text-align: center;
+    box-shadow: 0 0 20px rgba(255, 0, 0, 0.6);
+    animation: popIn 0.3s ease-out;
+}
+
+.popup-content p {
+    margin-bottom: 15px;
+    font-weight: bold;
+}
+
+.popup-content button {
+    background: #111;
+    color: #fff;
+    border: none;
+    padding: 8px 16px;
     border-radius: 5px;
     cursor: pointer;
 }
 
-.home-container section {
-    margin-bottom: 30px;
+.popup-content button:hover {
+    background: #333;
 }
 
-footer {
-    background-color: #b71c1c;
-    text-align: center;
-    padding: 10px;
-    position: fixed;
-    width: 100%;
-    bottom: 0;
+@keyframes popIn {
+    from { transform: scale(0.8); opacity: 0; }
+    to { transform: scale(1); opacity: 1; }
 }
 
-.flash {
-    padding: 10px;
-    margin-bottom: 15px;
-    border-radius: 5px;
+.popup-content.success {
+    background: #1b5e20;
+    box-shadow: 0 0 20px rgba(76, 175, 80, 0.6);
 }
 
-.flash.success { background-color: #4caf50; }
-.flash.danger { background-color: #f44336; }
-.flash.info { background-color: #2196f3; }
