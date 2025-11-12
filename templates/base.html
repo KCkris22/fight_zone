@@ -2,18 +2,35 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>Fight Zone</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>FightZone</title>
     <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
 </head>
+
 <body>
-    <header>
-        <h1>🥊 Fight Zone</h1>
+    {% if request.endpoint not in ['login', 'register'] %}
+    <!-- Navbar for Logged-In Pages -->
+    <header class="top-banner">
+        <div class="logo-box">
+            <a href="{{ url_for('home') }}" class="logo-text">🥊 FightZone 🥊</a>
+        </div>
+        <nav class="nav-links">
+            <a href="{{ url_for('about') }}">About</a>
+            <a href="{{ url_for('benefits') }}">Benefits</a>
+            <a href="{{ url_for('membership') }}">Membership</a>
+            <a href="{{ url_for('logout') }}">Logout</a>
+        </nav>
     </header>
+    {% endif %}
 
-    {% block content %}{% endblock %}
+    <!-- Page Content -->
+    <main>
+        {% block content %}{% endblock %}
+    </main>
 
+    <!-- Footer -->
     <footer>
-        <p>© 2025 Fight Zone | Founder: <strong>Cynrics</strong></p>
+        <p>&copy; 2025 FightZone Gym — All rights reserved. | Founder: Cynrics 🥊</p>
     </footer>
 </body>
 </html>

@@ -7,92 +7,160 @@ body {
     padding: 0;
 }
 
-header {
-    background-color: #b71c1c;
-    text-align: center;
-    padding: 20px 0;
+/* ===== HEADER + NAV ===== */
+.main-header {
+    background: linear-gradient(90deg, #b71c1c, #ff0000);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 15px 40px;
     box-shadow: 0 4px 10px rgba(0, 0, 0, 0.7);
+    position: sticky;
+    top: 0;
+    z-index: 100;
 }
 
-header h1 {
-    color: white;
-    font-size: 2rem;
+/* FightZone logo box (clickable) */
+.logo-box {
+    background: #0d0d0d;
+    color: #fff;
+    border: 2px solid #ff0000;
+    border-radius: 10px;
+    padding: 10px 25px;
+    font-size: 1.8rem;
+    font-weight: bold;
     letter-spacing: 2px;
     text-transform: uppercase;
+    box-shadow: 0 0 15px rgba(255, 0, 0, 0.6);
+    animation: pulse 2s infinite alternate;
+    cursor: pointer;
+    transition: transform 0.2s ease;
 }
 
-footer {
-    text-align: center;
-    background-color: #111;
-    padding: 15px;
-    color: #aaa;
-    position: fixed;
-    bottom: 0;
-    width: 100%;
-    font-size: 14px;
+.logo-box:hover {
+    transform: scale(1.05);
 }
 
+.logo-text {
+    font-family: 'Bebas Neue', sans-serif;
+}
+
+/* Navigation buttons (upper right) */
+.nav-links a {
+    margin-left: 15px;
+    color: #fff;
+    font-weight: bold;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    background: #0d0d0d;
+    padding: 10px 20px;
+    border: 2px solid #ff0000;
+    border-radius: 8px;
+    transition: 0.3s ease;
+    box-shadow: 0 0 10px rgba(255, 0, 0, 0.4);
+}
+
+.nav-links a:hover {
+    background: #ff0000;
+    color: #fff;
+    transform: scale(1.05);
+}
+
+.logout {
+    background: #fff !important;
+    color: #000 !important;
+}
+
+/* Pulse animation for glowing boxing logo */
+@keyframes pulse {
+    from { box-shadow: 0 0 10px rgba(255, 0, 0, 0.3); transform: scale(1); }
+    to { box-shadow: 0 0 20px rgba(255, 0, 0, 0.7); transform: scale(1.03); }
+}
+
+/* ===== LOGIN FORM ===== */
 .form-container {
-    width: 350px;
-    margin: 120px auto;
-    background-color: #111;
-    padding: 30px;
+    width: 380px;
+    margin: 60px auto 100px auto;
+    background-color: #0d0d0d;
+    padding: 35px;
     border-radius: 15px;
-    box-shadow: 0 0 15px rgba(255, 0, 0, 0.4);
+    border: 2px solid #b71c1c;
+    box-shadow: 0 0 25px rgba(255, 0, 0, 0.3);
     text-align: center;
+    transition: 0.3s ease;
+}
+
+.form-container:hover {
+    transform: scale(1.01);
+    box-shadow: 0 0 40px rgba(255, 0, 0, 0.5);
 }
 
 .form-container h2 {
-    margin-bottom: 20px;
     color: #ff4444;
-    font-size: 1.5rem;
+    margin-bottom: 25px;
+    text-transform: uppercase;
+    letter-spacing: 1px;
 }
 
+/* Boxy input fields */
 input {
     display: block;
     width: 90%;
-    margin: 10px auto;
-    padding: 10px;
-    border: 1px solid #ff4444;
-    border-radius: 5px;
-    background-color: #222;
-    color: white;
-    font-size: 14px;
+    margin: 12px auto;
+    padding: 12px;
+    border: 2px solid #b71c1c;
+    border-radius: 8px;
+    background-color: #000;
+    color: #fff;
+    font-size: 15px;
+    font-weight: bold;
+    letter-spacing: 0.5px;
+    transition: 0.3s ease;
 }
 
 input:focus {
     outline: none;
     border-color: #ff0000;
-    box-shadow: 0 0 10px rgba(255, 0, 0, 0.4);
+    box-shadow: 0 0 10px rgba(255, 0, 0, 0.7);
 }
 
+/* Fight Zone Button */
 button {
     width: 95%;
-    background-color: #b71c1c;
+    background: linear-gradient(90deg, #ff0000, #b71c1c);
     color: #fff;
     border: none;
-    padding: 10px;
-    font-size: 15px;
-    border-radius: 5px;
+    padding: 12px;
+    font-size: 16px;
+    font-weight: bold;
+    border-radius: 8px;
     cursor: pointer;
     margin-top: 10px;
-}
-
-button:hover {
-    background-color: #ff0000;
+    letter-spacing: 1px;
     transition: 0.3s ease;
 }
 
-a {
-    color: #ff4444;
-    text-decoration: none;
+button:hover {
+    background: #ff1a1a;
+    transform: scale(1.05);
 }
 
-a:hover {
+/* Links under form */
+.form-container p {
+    margin-top: 20px;
+    color: #bbb;
+}
+
+.form-container a {
+    color: #ff4444;
+    font-weight: bold;
+}
+
+.form-container a:hover {
     text-decoration: underline;
 }
 
-/* Popup styling */
+/* ===== POPUPS ===== */
 .popup {
     display: none;
     position: fixed;
@@ -144,3 +212,307 @@ a:hover {
     box-shadow: 0 0 20px rgba(76, 175, 80, 0.6);
 }
 
+/* ===== SECTIONS (for Home, About, Benefits, Membership) ===== */
+.section {
+    padding: 100px 60px;
+    text-align: center;
+}
+
+.section h2 {
+    color: #ff4444;
+    font-size: 2rem;
+    margin-bottom: 20px;
+    text-transform: uppercase;
+}
+
+.section p, .section ul {
+    font-size: 1.1rem;
+    line-height: 1.6;
+    color: #ddd;
+}
+
+/* ===== MEMBERSHIP PLANS ===== */
+.plans {
+    display: flex;
+    justify-content: center;
+    flex-wrap: wrap;
+    gap: 30px;
+    margin-top: 40px;
+}
+
+.plan-card {
+    background: #111;
+    border: 2px solid #ff0000;
+    border-radius: 15px;
+    padding: 25px;
+    width: 280px;
+    box-shadow: 0 0 20px rgba(255, 0, 0, 0.3);
+    transition: 0.3s ease;
+}
+
+.plan-card:hover {
+    transform: scale(1.05);
+    box-shadow: 0 0 30px rgba(255, 0, 0, 0.6);
+}
+
+.plan-card h3 {
+    color: #ff4444;
+    font-size: 1.4rem;
+    margin-bottom: 10px;
+}
+
+.price {
+    font-size: 1.2rem;
+    color: #fff;
+    margin-bottom: 15px;
+}
+
+.plan-card ul {
+    text-align: left;
+    padding-left: 20px;
+    color: #ccc;
+}
+
+/* ===== POPUP for membership payments ===== */
+#paymentPopup, #successPopup {
+    display: none;
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.85);
+    justify-content: center;
+    align-items: center;
+}
+
+.popup-content.success-box {
+    background: #0d0d0d;
+    border: 2px solid #00ff00;
+    color: #fff;
+    box-shadow: 0 0 20px rgba(0, 255, 0, 0.5);
+}
+
+/* ===== Navbar Styling ===== */
+.top-banner {
+    background: linear-gradient(90deg, #b71c1c, #ff0000);
+    height: 80px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0 60px;
+    box-shadow: 0 4px 10px rgba(255, 0, 0, 0.3);
+}
+
+/* Logo Box */
+.logo-box {
+    background: #0d0d0d;
+    border: 2px solid #ff0000;
+    border-radius: 10px;
+    padding: 10px 25px;
+    box-shadow: 0 0 15px rgba(255, 0, 0, 0.6);
+    animation: pulse 2s infinite alternate;
+}
+
+.logo-text {
+    color: #fff;
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 1.8rem;
+    text-decoration: none;
+    letter-spacing: 2px;
+}
+
+.logo-box:hover {
+    transform: scale(1.05);
+}
+
+/* Navbar Links */
+.nav-links a {
+    color: #fff;
+    background: #111;
+    border: 2px solid #ff0000;
+    padding: 8px 16px;
+    border-radius: 6px;
+    text-decoration: none;
+    font-weight: bold;
+    letter-spacing: 1px;
+    margin-left: 15px;
+    transition: 0.3s;
+}
+
+.nav-links a:hover {
+    background: #ff0000;
+    color: #fff;
+    transform: scale(1.1);
+}
+
+/* ===== Login Page Centering ===== */
+.login-page {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    min-height: 90vh;
+}
+
+/* Centered Logo Above Login Form */
+.logo-container {
+    text-align: center;
+    margin-bottom: 20px;
+}
+
+.logo-box {
+    background: #0d0d0d;
+    border: 2px solid #ff0000;
+    border-radius: 10px;
+    padding: 12px 30px;
+    color: white;
+    font-size: 2rem;
+    font-weight: bold;
+    box-shadow: 0 0 20px rgba(255, 0, 0, 0.6);
+    animation: pulse 2s infinite alternate;
+}
+
+.logo-text {
+    letter-spacing: 2px;
+}
+
+/* Footer Centering Fix */
+footer {
+    text-align: center;
+    background-color: #111;
+    padding: 15px;
+    color: #aaa;
+    width: 100%;
+    font-size: 14px;
+    position: fixed;
+    bottom: 0;
+    left: 0;
+}
+
+/* ===== REGISTER PAGE FINAL FIX ===== */
+.register-page .top-banner,
+.register-page .main-header {
+    display: none !important;
+}
+
+.register-page {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    min-height: 100vh;
+    background-color: #000;
+    margin: 0;
+    padding: 0;
+}
+
+/* Centered FightZone logo */
+.register-page .logo-container {
+    text-align: center;
+    margin-bottom: 25px;
+    transform: translateY(-50px); /* Raise logo slightly */
+}
+
+/* Logo Box (same style as login) */
+.register-page .logo-box {
+    display: inline-block;
+    background: #0d0d0d;
+    border: 2px solid #ff0000;
+    border-radius: 10px;
+    padding: 12px 30px;
+    color: white;
+    font-size: 2.2rem;
+    font-weight: bold;
+    box-shadow: 0 0 20px rgba(255, 0, 0, 0.6);
+    animation: pulse 2s infinite alternate;
+}
+
+/* Logo text + emoji centered perfectly */
+.register-page .logo-text {
+    font-family: 'Bebas Neue', sans-serif;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    letter-spacing: 2px;
+    gap: 8px;
+}
+
+.register-page .logo-text span {
+    font-size: 2.2rem;
+}
+
+/* ===== HOME PAGE HERO SECTION ===== */
+.home-hero {
+    position: relative;
+    height: calc(100vh - 80px); /* account for top banner */
+    background: url("../static/images/home.jpg") no-repeat center center/cover;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    overflow: hidden;
+}
+
+/* Dark overlay for contrast */
+.home-hero .overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.6);
+    z-index: 1;
+}
+
+/* Hero content box */
+.home-content {
+    position: relative;
+    z-index: 2;
+    color: #fff;
+    padding: 40px 60px;
+    border: 2px solid #ff0000;
+    border-radius: 15px;
+    background: rgba(13, 13, 13, 0.8);
+    box-shadow: 0 0 30px rgba(255, 0, 0, 0.4);
+    animation: fadeInUp 1s ease-in-out;
+}
+
+/* Main title */
+.home-content h1 {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 3rem;
+    color: #ff0000;
+    margin-bottom: 20px;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    text-shadow: 0 0 10px rgba(255, 0, 0, 0.7);
+}
+
+/* Highlight text */
+.home-content .highlight {
+    color: #fff;
+    background: #ff0000;
+    padding: 5px 10px;
+    border-radius: 8px;
+    box-shadow: 0 0 15px rgba(255, 0, 0, 0.6);
+}
+
+/* Subtext */
+.home-content p {
+    color: #ddd;
+    font-size: 1.2rem;
+    font-weight: 500;
+}
+
+/* Animation */
+@keyframes fadeInUp {
+    from {
+        opacity: 0;
+        transform: translateY(30px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}

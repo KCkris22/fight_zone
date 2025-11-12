@@ -84,12 +84,32 @@ def login():
 
     return render_template('login.html', popup_message=popup_message)
 
-# ---------------- Home ----------------
+
+# ---------------------- ROUTES -----------------------
 @app.route('/home')
 def home():
     if 'user_id' not in session:
         return redirect(url_for('login'))
     return render_template('home.html', username=session.get('username'))
+
+@app.route('/about')
+def about():
+    if 'user_id' not in session:
+        return redirect(url_for('login'))
+    return render_template('about.html', username=session.get('username'))
+
+@app.route('/benefits')
+def benefits():
+    if 'user_id' not in session:
+        return redirect(url_for('login'))
+    return render_template('benefits.html', username=session.get('username'))
+
+@app.route('/membership')
+def membership():
+    if 'user_id' not in session:
+        return redirect(url_for('login'))
+    return render_template('membership.html', username=session.get('username'))
+
 
 # ---------------- Logout ----------------
 @app.route('/logout')

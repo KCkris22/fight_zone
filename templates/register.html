@@ -1,35 +1,51 @@
 {% extends "base.html" %}
 {% block content %}
-<div class="form-container">
-    <h2>Create Your Fight Zone Account</h2>
 
-    {% if popup_message %}
-    <div id="popup" class="popup">
-  <div class="popup-content {% if 'created' in popup_message %}success{% endif %}">
-            <p>{{ popup_message }}</p>
-            <button id="closePopup">OK</button>
+<body class="register-page">
+
+    <!-- ✅ Centered Logo (No red banner) -->
+    <div class="logo-container">
+        <div class="logo-box">
+            <span class="logo-text">🥊 FightZone 🥊</span>
         </div>
     </div>
-    {% endif %}
 
-    <form method="POST">
-        <input type="text" name="username" placeholder="Username" required>
-        <input type="email" name="email" placeholder="Email" required>
-        <input type="password" name="password" placeholder="Password" required>
-        <button type="submit">Register</button>
-    </form>
+    <!-- ✅ Register Form -->
+    <div class="form-container">
+        <h2>Join the Fight Zone</h2>
 
-    <p>Already have an account? <a href="{{ url_for('login') }}">Login here</a></p>
-</div>
+        {% if popup_message %}
+        <div id="popup" class="popup">
+            <div class="popup-content">
+                <p>{{ popup_message }}</p>
+                <button id="closePopup">OK</button>
+            </div>
+        </div>
+        {% endif %}
 
-<script>
-document.addEventListener("DOMContentLoaded", function() {
-    const popup = document.getElementById("popup");
-    const closeBtn = document.getElementById("closePopup");
-    if (popup && closeBtn) {
-        popup.style.display = "flex";
-        closeBtn.addEventListener("click", () => popup.style.display = "none");
-    }
-});
-</script>
+        <form method="POST">
+            <input type="text" name="username" placeholder="Choose Username" required>
+            <input type="email" name="email" placeholder="Enter Email" required>
+            <input type="password" name="password" placeholder="Enter Password" required>
+            <button type="submit">CREATE ACCOUNT</button>
+        </form>
+
+        <p>Already have an account? <a href="{{ url_for('login') }}">Login here</a></p>
+    </div>
+
+    <footer>© 2025 FightZone. All Rights Reserved.</footer>
+
+    <script>
+    document.addEventListener("DOMContentLoaded", function() {
+        const popup = document.getElementById("popup");
+        const closeBtn = document.getElementById("closePopup");
+        if (popup && closeBtn) {
+            popup.style.display = "flex";
+            closeBtn.addEventListener("click", () => popup.style.display = "none");
+        }
+    });
+    </script>
+
+</body>
+
 {% endblock %}

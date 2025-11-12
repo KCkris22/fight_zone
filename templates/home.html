@@ -1,30 +1,16 @@
 {% extends "base.html" %}
 {% block content %}
-<div class="home-container">
-    <h2>Boxing Tips for Beginners to Pros</h2>
-    <section>
-        <h3>Beginner Tips</h3>
-        <ul>
-            <li>Focus on footwork and stance.</li>
-            <li>Practice basic punches: jab, cross, hook.</li>
-            <li>Learn defensive techniques.</li>
-        </ul>
-    </section>
-    <section>
-        <h3>Intermediate Tips</h3>
-        <ul>
-            <li>Work on combinations and timing.</li>
-            <li>Increase speed and endurance.</li>
-            <li>Study opponents’ patterns.</li>
-        </ul>
-    </section>
-    <section>
-        <h3>Pro Tips</h3>
-        <ul>
-            <li>Analyze fight videos.</li>
-            <li>Focus on mental toughness and strategy.</li>
-            <li>Refine every punch and movement.</li>
-        </ul>
-    </section>
-</div>
+
+<section class="home-hero">
+    <div class="overlay"></div>
+    <div class="home-content">
+        <h1>Welcome to <span class="highlight">FightZone</span>, {{ session['username'] }} 🥊</h1>
+        <p>Your journey to strength, endurance, and confidence starts here.</p>
+    </div>
+</section>
+
+<footer>
+    © 2025 FightZone. All Rights Reserved.
+</footer>
+
 {% endblock %}

@@ -1,34 +1,22 @@
 {% extends "base.html" %}
 {% block content %}
-<div class="form-container">
-    <h2>Login to Fight Zone</h2>
-
-    {% if popup_message %}
-    <div id="popup" class="popup">
-        <div class="popup-content">
-            <p>{{ popup_message }}</p>
-            <button id="closePopup">OK</button>
+<div class="login-page">
+    <!-- Centered Logo -->
+    <div class="logo-container">
+        <div class="logo-box">
+            🥊 <span class="logo-text">FightZone</span> 🥊
         </div>
     </div>
-    {% endif %}
 
-    <form method="POST">
-        <input type="email" name="email" placeholder="Email" required>
-        <input type="password" name="password" placeholder="Password" required>
-        <button type="submit">Login</button>
-    </form>
-
-    <p>Don't have an account? <a href="{{ url_for('register') }}">Register here</a></p>
+    <!-- Login Form -->
+    <div class="form-container">
+        <h2>Login</h2>
+        <form method="POST" action="/login">
+            <input type="text" name="email" placeholder="Email" required>
+            <input type="password" name="password" placeholder="Password" required>
+            <button type="submit">Login</button>
+        </form>
+        <p>Don’t have an account? <a href="{{ url_for('register') }}">Register</a></p>
+    </div>
 </div>
-
-<script>
-document.addEventListener("DOMContentLoaded", function() {
-    const popup = document.getElementById("popup");
-    const closeBtn = document.getElementById("closePopup");
-    if (popup && closeBtn) {
-        popup.style.display = "flex";
-        closeBtn.addEventListener("click", () => popup.style.display = "none");
-    }
-});
-</script>
 {% endblock %}
