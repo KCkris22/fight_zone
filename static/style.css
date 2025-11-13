@@ -20,55 +20,100 @@ body {
     z-index: 100;
 }
 
-/* FightZone logo box (clickable) */
+/* ===== POLISHED FIGHTZONE HEADER ===== */
+.top-banner {
+    background: linear-gradient(90deg, #b71c1c, #ff0000);
+    height: 80px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0 60px;
+    box-shadow: 0 4px 20px rgba(255, 0, 0, 0.3);
+    position: sticky;
+    top: 0;
+    z-index: 1000;
+}
+
+/* ===== Logo Box (Clickable “Home” Button) ===== */
 .logo-box {
     background: #0d0d0d;
-    color: #fff;
-    border: 2px solid #ff0000;
-    border-radius: 10px;
-    padding: 10px 25px;
-    font-size: 1.8rem;
-    font-weight: bold;
-    letter-spacing: 2px;
-    text-transform: uppercase;
-    box-shadow: 0 0 15px rgba(255, 0, 0, 0.6);
-    animation: pulse 2s infinite alternate;
+    border: 3px solid #ff0000;
+    border-radius: 12px;
+    padding: 10px 30px;
+    box-shadow:
+        0 0 20px rgba(255, 0, 0, 0.6), /* outer red glow */
+        inset 0 0 10px rgba(255, 0, 0, 0.6); /* inner red line */
+    transition: all 0.3s ease;
     cursor: pointer;
-    transition: transform 0.2s ease;
 }
 
 .logo-box:hover {
-    transform: scale(1.05);
+    transform: scale(1.08);
+    box-shadow:
+        0 0 30px rgba(255, 0, 0, 0.9),
+        inset 0 0 15px rgba(255, 0, 0, 0.8);
 }
 
 .logo-text {
     font-family: 'Bebas Neue', sans-serif;
+    font-size: 1.9rem;
+    color: #fff;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    text-shadow: 0 0 10px rgba(255, 0, 0, 0.7);
 }
 
-/* Navigation buttons (upper right) */
+/* ===== Navigation Buttons (About, Benefits, Membership, Logout) ===== */
 .nav-links a {
-    margin-left: 15px;
     color: #fff;
+    background: #0d0d0d;
+    border: 2px solid #ff0000;
+    padding: 10px 20px;
+    border-radius: 10px;
+    text-decoration: none;
     font-weight: bold;
     text-transform: uppercase;
     letter-spacing: 1px;
-    background: #0d0d0d;
-    padding: 10px 20px;
-    border: 2px solid #ff0000;
-    border-radius: 8px;
+    margin-left: 15px;
     transition: 0.3s ease;
-    box-shadow: 0 0 10px rgba(255, 0, 0, 0.4);
+    box-shadow:
+        0 0 15px rgba(255, 0, 0, 0.4),
+        inset 0 0 8px rgba(255, 0, 0, 0.5); /* inner red line */
 }
 
+/* Hover effect – glowing neon pop */
 .nav-links a:hover {
     background: #ff0000;
     color: #fff;
-    transform: scale(1.05);
+    transform: scale(1.08);
+    box-shadow:
+        0 0 30px rgba(255, 0, 0, 0.8),
+        inset 0 0 15px rgba(0, 0, 0, 0.8);
 }
 
+/* Active/Focus style for the page currently viewed */
+.nav-links a.active {
+    background: #ff0000;
+    color: #fff;
+    box-shadow:
+        0 0 30px rgba(255, 0, 0, 0.9),
+        inset 0 0 10px rgba(0, 0, 0, 0.6);
+}
+
+/* ===== Logout button (different vibe) ===== */
 .logout {
     background: #fff !important;
     color: #000 !important;
+    border: 2px solid #ff0000 !important;
+    box-shadow:
+        0 0 10px rgba(255, 255, 255, 0.6),
+        inset 0 0 8px rgba(255, 0, 0, 0.4);
+}
+
+.logout:hover {
+    background: #ff4444 !important;
+    color: #fff !important;
+    transform: scale(1.08);
 }
 
 /* Pulse animation for glowing boxing logo */
@@ -514,5 +559,173 @@ footer {
     to {
         opacity: 1;
         transform: translateY(0);
+    }
+}
+
+/* ===== ABOUT PAGE ===== */
+.about-section {
+    position: relative;
+    min-height: 100vh;
+    padding: 120px 60px;
+    text-align: center;
+    background-color: #000;
+    color: #fff;
+}
+
+/* Glowy box title like the home page */
+.about-section h1 {
+    display: inline-block;
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 3rem;
+    color: #fff;
+    background: #ff0000;
+    padding: 10px 25px;
+    border-radius: 12px;
+    border: 2px solid #b71c1c;
+    box-shadow:
+        0 0 25px rgba(255, 0, 0, 0.7),
+        inset 0 0 10px rgba(0, 0, 0, 0.8);
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    margin-bottom: 40px;
+    text-shadow: 0 0 10px rgba(255, 0, 0, 0.9);
+    animation: pulse 2s infinite alternate;
+}
+
+/* Description Text (Cool & readable H2) */
+.about-section h2 {
+    font-size: 1.3rem;
+    line-height: 1.8;
+    font-weight: 400;
+    color: #ddd;
+    margin: 0 auto;
+    max-width: 800px;
+    background: rgba(13, 13, 13, 0.85);
+    border: 2px solid #ff0000;
+    border-radius: 12px;
+    padding: 25px 35px;
+    box-shadow: 0 0 20px rgba(255, 0, 0, 0.3);
+    text-align: justify;
+}
+
+/* Bible Verse Section */
+.about-verse {
+    margin-top: 50px;
+    font-size: 1.2rem;
+    color: #ccc;
+    font-style: italic;
+}
+
+.about-verse span {
+    display: inline-block;
+    background: #ff0000;
+    color: #fff;
+    padding: 5px 12px;
+    border-radius: 8px;
+    border: 2px solid #b71c1c;
+    box-shadow: 0 0 20px rgba(255, 0, 0, 0.6);
+    font-weight: bold;
+    font-family: 'Bebas Neue', sans-serif;
+    margin-bottom: 10px;
+}
+
+/* ===== BENEFITS PAGE STYLING (REVISED) ===== */
+.benefits-section {
+    min-height: 100vh;
+    background: linear-gradient(180deg, #000 0%, #111 100%);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: flex-start;
+    padding: 80px 40px;
+    color: #fff;
+    text-align: center;
+    overflow: hidden;
+}
+
+.benefits-title {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 3.2rem;
+    letter-spacing: 3px;
+    text-transform: uppercase;
+    color: #fff;
+    padding: 20px 60px;
+    border: 3px solid #ff0000;
+    border-radius: 15px;
+    background: rgba(13, 13, 13, 0.9);
+    box-shadow:
+        0 0 25px rgba(255, 0, 0, 0.7),
+        inset 0 0 10px rgba(255, 0, 0, 0.6);
+    margin-bottom: 60px;
+    animation: pulseBox 2s infinite alternate;
+}
+
+.benefits-container {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    align-items: stretch;
+    gap: 35px;
+    max-width: 1300px;
+}
+
+/* CARD DESIGN */
+.benefit-card {
+    background: #111;
+    border: 2px solid #ff0000;
+    border-radius: 15px;
+    padding: 25px;
+    width: 320px; /* ⬅ widened for title fit */
+    box-shadow: 0 0 25px rgba(255, 0, 0, 0.4);
+    transition: 0.3s ease;
+    text-align: center;
+}
+
+.benefit-card:hover {
+    transform: scale(1.05);
+    box-shadow: 0 0 35px rgba(255, 0, 0, 0.8);
+}
+
+/* Title inside each card */
+/* Title inside each benefit card (FINAL FIX) */
+.benefit-card h2 {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 1.1rem; /* ✅ slightly smaller to fit all text */
+    color: #fff;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    margin-bottom: 15px;
+    border-bottom: 2px solid #ff0000;
+    padding-bottom: 8px;
+    white-space: nowrap; /* keep in one line */
+    overflow: visible; /* ensure full visibility */
+    text-align: center;
+}
+
+/* Description text (make it boxy and clean) */
+.benefit-card p {
+    font-family: 'Poppins', sans-serif;
+    font-size: 1rem;
+    color: #ddd;
+    line-height: 1.5;
+    letter-spacing: 0.5px;
+}
+
+/* FLOATING ANIMATION */
+@keyframes floatBox {
+    0% { transform: translateY(0px); }
+    50% { transform: translateY(-10px); }
+    100% { transform: translateY(0px); }
+}
+
+/* GLOWING PULSE */
+@keyframes pulseBox {
+    from {
+        box-shadow: 0 0 20px rgba(255, 0, 0, 0.5),
+                    inset 0 0 8px rgba(255, 0, 0, 0.4);
+    }
+    to {
+        box-shadow: 0 0 40px rgba(255, 0, 0, 0.9),
+                    inset 0 0 15px rgba(255, 0, 0, 0.7);
     }
 }

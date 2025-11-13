@@ -1,0 +1,81 @@
+{% extends "base.html" %}
+{% block content %}
+<section class="section membership">
+    <h2>Membership Options</h2>
+    <div class="plans">
+        <div class="plan-card">
+            <h3>Beginner</h3>
+            <p class="price">₱1,000 / month</p>
+            <ul>
+                <li>Gym Access (Basic)</li>
+                <li>Starter Gloves (Free)</li>
+                <li>2 Training Sessions / week</li>
+            </ul>
+            <button onclick="openPayment('Beginner', 1000)">Join Now</button>
+        </div>
+        <div class="plan-card">
+            <h3>Amateur</h3>
+            <p class="price">₱2,000 / month</p>
+            <ul>
+                <li>Full Gym Access + Sparring</li>
+                <li>Weekly Group Training</li>
+                <li>1-on-1 Session / week</li>
+            </ul>
+            <button onclick="openPayment('Amateur', 2000)">Join Now</button>
+        </div>
+        <div class="plan-card">
+            <h3>Pro</h3>
+            <p class="price">₱3,500 / month</p>
+            <ul>
+                <li>Unlimited Access</li>
+                <li>Personal Trainer</li>
+                <li>Fight Simulation + Pro Gear</li>
+            </ul>
+            <button onclick="openPayment('Pro', 3500)">Join Now</button>
+        </div>
+    </div>
+</section>
+
+<!-- Payment popup -->
+<div id="paymentPopup" class="popup">
+    <div class="popup-content">
+        <h3 id="planTitle"></h3>
+        <p>Choose payment method:</p>
+        <button onclick="completePayment('Bank')">💳 Bank</button>
+        <button onclick="completePayment('Cash')">💵 Cash</button>
+        <button class="close-btn" onclick="closePopup()">Cancel</button>
+    </div>
+</div>
+
+<div id="successPopup" class="popup">
+    <div class="popup-content success-box">
+        <h3>✅ Payment Successful!</h3>
+        <p id="successMessage"></p>
+        <button onclick="closeSuccess()">OK</button>
+    </div>
+</div>
+
+<script>
+let selectedPlan = '';
+
+function openPayment(plan, price) {
+    selectedPlan = plan;
+    document.getElementById("planTitle").innerText = `Join ${plan} Plan — ₱${price}`;
+    document.getElementById("paymentPopup").style.display = "flex";
+}
+
+function closePopup() {
+    document.getElementById("paymentPopup").style.display = "none";
+}
+
+function completePayment(method) {
+    document.getElementById("paymentPopup").style.display = "none";
+    document.getElementById("successPopup").style.display = "flex";
+    document.getElementById("successMessage").innerText = `You joined ${selectedPlan} via ${method} Payment. Welcome to FightZone!`;
+}
+
+function closeSuccess() {
+    document.getElementById("successPopup").style.display = "none";
+}
+</script>
+{% endblock %}
