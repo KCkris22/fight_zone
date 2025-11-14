@@ -729,3 +729,57 @@ footer {
                     inset 0 0 15px rgba(255, 0, 0, 0.7);
     }
 }
+
+/* ===== ADMIN DASHBOARD ===== */
+.admin-dashboard {
+    padding: 100px 40px;
+    text-align: center;
+    background-color: #000;
+    color: #fff;
+}
+
+.admin-dashboard h1 {
+    color: #ff0000;
+    font-family: 'Bebas Neue', sans-serif;
+    text-transform: uppercase;
+    text-shadow: 0 0 10px rgba(255, 0, 0, 0.8);
+    margin-bottom: 40px;
+}
+
+.admin-section {
+    background: #111;
+    border: 2px solid #ff0000;
+    border-radius: 12px;
+    padding: 25px;
+    margin-bottom: 50px;
+    box-shadow: 0 0 20px rgba(255, 0, 0, 0.4);
+}
+
+.admin-section h2 {
+    color: #ff4444;
+    text-transform: uppercase;
+    margin-bottom: 20px;
+}
+
+.admin-section table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 10px;
+    color: #fff;
+}
+
+.admin-section th, .admin-section td {
+    border: 1px solid #ff0000;
+    padding: 10px;
+    text-align: center;
+}
+
+.admin-section th {
+    background-color: #b71c1c;
+    font-weight: bold;
+    text-transform: uppercase;
+}
+
+.admin-section tr:nth-child(even) {
+    background-color: #1a1a1a;
+}
