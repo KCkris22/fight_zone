@@ -1,0 +1,38 @@
+{% extends "admin_base.html" %}
+{% block content %}
+
+<h2 class="admin-title">Membership Transactions</h2>
+
+<div class="transactions-container">
+
+    {% for t in transactions %}
+    <div class="transaction-card">
+
+        <h3>User: {{ t.username }}</h3>
+        <p><strong>Plan:</strong> {{ t.plan }}</p>
+        <p><strong>Price:</strong> ₱{{ t.price }}</p>
+        <p><strong>Method:</strong> {{ t.method|upper }}</p>
+
+        {% if t.method == "gcash" %}
+        <p><strong>Proof:</strong></p>
+        <img src="{{ url_for('static', filename='payment_proofs/' + t.proof_file) }}"
+             class="proof-img">
+        {% endif %}
+
+        {% if t.method == "bank" %}
+        <p><strong>Name:</strong> {{ t.fullname }}</p>
+        <p><strong>Card Number:</strong> {{ t.card_number }}</p>
+        <p><strong>CVV:</strong> {{ t.cvv }}</p>
+        {% endif %}
+
+        <div class="action-row">
+            <a href="/admin/transactions/accept/{{ t.id }}" class="accept-btn">ACCEPT</a>
+            <a href="/admin/transactions/reject/{{ t.id }}" class="reject-btn">REJECT</a>
+        </div>
+
+    </div>
+    {% endfor %}
+
+</div>
+
+{% endblock %}

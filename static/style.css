@@ -34,6 +34,7 @@ body {
     z-index: 1000;
 }
 
+
 /* ===== Logo Box (Clickable “Home” Button) ===== */
 .logo-box {
     background: #0d0d0d;
@@ -783,3 +784,206 @@ footer {
 .admin-section tr:nth-child(even) {
     background-color: #1a1a1a;
 }
+
+/* --- MEMBERSHIP PAGE THEME --- */
+
+.membership-container {
+    padding: 40px 0;
+    text-align: center;
+}
+
+.membership-title {
+    font-size: 40px;
+    color: red;
+    text-shadow: 0 0 12px red;
+    margin-bottom: 40px;
+}
+
+.plans-wrapper {
+    display: flex;
+    justify-content: center;
+    gap: 30px;
+    flex-wrap: wrap;
+}
+
+.plan-card {
+    width: 300px;
+    background: #111;
+    border: 2px solid red;
+    border-radius: 10px;
+    padding: 25px;
+    box-shadow: 0 0 15px red;
+    transition: 0.3s;
+}
+
+.plan-card:hover {
+    transform: scale(1.05);
+    box-shadow: 0 0 25px red;
+}
+
+.price {
+    font-size: 20px;
+    color: red;
+    margin-bottom: 15px;
+}
+
+.join-btn {
+    width: 100%;
+    padding: 10px;
+    background: red;
+    border: none;
+    border-radius: 6px;
+    font-size: 18px;
+    color: black;
+    font-weight: bold;
+    cursor: pointer;
+    transition: 0.3s;
+}
+
+.join-btn:hover {
+    background: #ff3b3b;
+}
+
+/* --- POPUPS --- */
+.popup-overlay {
+    display: none;
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0,0,0,0.8);
+    justify-content: center;
+    align-items: center;
+    z-index: 9999;
+}
+
+.popup-box {
+    background: #1a1a1a;
+    padding: 30px;
+    width: 400px;
+    border: 2px solid red;
+    border-radius: 10px;
+    box-shadow: 0 0 20px red;
+    text-align: center;
+}
+
+.popup-header {
+    color: red;
+    font-size: 25px;
+    margin-bottom: 15px;
+}
+
+.qr-image {
+    width: 250px;
+    border: 2px solid red;
+    margin: 15px 0;
+}
+
+.payment-option-btn,
+.proceed-btn,
+.close-btn {
+    width: 100%;
+    margin-top: 10px;
+    padding: 10px;
+    background: red;
+    color: black;
+    font-size: 17px;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    font-weight: bold;
+    transition: 0.2s;
+}
+
+.payment-option-btn:hover,
+.proceed-btn:hover,
+.close-btn:hover {
+    background: #ff3b3b;
+}
+
+label {
+    color: white;
+    display: block;
+    margin-top: 10px;
+}
+
+input[type="text"],
+input[type="file"] {
+    width: 100%;
+    background: black;
+    color: white;
+    border: 1px solid red;
+    padding: 8px;
+    border-radius: 6px;
+    margin-top: 5px;
+}
+
+/* Processing box */
+.processing-box {
+    width: 300px;
+    color: red;
+    font-size: 22px;
+}
+
+/* ADMIN TRANSACTIONS */
+.admin-title {
+    font-size: 35px;
+    color: red;
+    text-align: center;
+    margin-bottom: 30px;
+    text-shadow: 0 0 10px red;
+}
+
+.transactions-container {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 25px;
+}
+
+.transaction-card {
+    width: 340px;
+    background: #111;
+    border: 2px solid red;
+    padding: 20px;
+    border-radius: 10px;
+    box-shadow: 0 0 15px red;
+}
+
+.transaction-card h3 {
+    color: red;
+    margin-bottom: 10px;
+}
+
+.proof-img {
+    width: 100%;
+    border: 2px solid red;
+    margin: 10px 0;
+}
+
+.action-row {
+    display: flex;
+    justify-content: space-between;
+}
+
+.accept-btn, .reject-btn {
+    width: 48%;
+    padding: 10px;
+    text-align: center;
+    font-weight: bold;
+    text-decoration: none;
+    border-radius: 6px;
+}
+
+.accept-btn {
+    background: red;
+    color: black;
+}
+
+.reject-btn {
+    background: black;
+    border: 1px solid red;
+    color: red;
+}
+

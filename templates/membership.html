@@ -1,81 +1,158 @@
 {% extends "base.html" %}
 {% block content %}
-<section class="section membership">
-    <h2>Membership Options</h2>
-    <div class="plans">
+
+<link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+
+<section class="membership-container">
+    <h2 class="membership-title">Membership Options</h2>
+
+    <div class="plans-wrapper">
+
+        <!-- BEGINNER -->
         <div class="plan-card">
             <h3>Beginner</h3>
             <p class="price">₱1,000 / month</p>
             <ul>
-                <li>Gym Access (Basic)</li>
-                <li>Starter Gloves (Free)</li>
-                <li>2 Training Sessions / week</li>
+                <li>Basic Gym Access</li>
+                <li>Free Starter Gloves</li>
+                <li>2 Sessions / Week</li>
             </ul>
-            <button onclick="openPayment('Beginner', 1000)">Join Now</button>
+            <button class="join-btn" onclick="openPayment('Beginner', 1000)">Join Now</button>
         </div>
+
+        <!-- AMATEUR -->
         <div class="plan-card">
             <h3>Amateur</h3>
             <p class="price">₱2,000 / month</p>
             <ul>
                 <li>Full Gym Access + Sparring</li>
                 <li>Weekly Group Training</li>
-                <li>1-on-1 Session / week</li>
+                <li>1-on-1 Session / Week</li>
             </ul>
-            <button onclick="openPayment('Amateur', 2000)">Join Now</button>
+            <button class="join-btn" onclick="openPayment('Amateur', 2000)">Join Now</button>
         </div>
+
+        <!-- PRO -->
         <div class="plan-card">
             <h3>Pro</h3>
             <p class="price">₱3,500 / month</p>
             <ul>
                 <li>Unlimited Access</li>
                 <li>Personal Trainer</li>
-                <li>Fight Simulation + Pro Gear</li>
+                <li>Fight Simulation + Gear</li>
             </ul>
-            <button onclick="openPayment('Pro', 3500)">Join Now</button>
+            <button class="join-btn" onclick="openPayment('Pro', 3500)">Join Now</button>
         </div>
+
     </div>
 </section>
 
-<!-- Payment popup -->
-<div id="paymentPopup" class="popup">
-    <div class="popup-content">
-        <h3 id="planTitle"></h3>
-        <p>Choose payment method:</p>
-        <button onclick="completePayment('Bank')">💳 Bank</button>
-        <button onclick="completePayment('Cash')">💵 Cash</button>
-        <button class="close-btn" onclick="closePopup()">Cancel</button>
+<!-- PAYMENT CHOICE POPUP -->
+<div id="paymentPopup" class="popup-overlay">
+    <div class="popup-box">
+        <h3 id="paymentTitle" class="popup-header"></h3>
+        <p>Select a payment method:</p>
+
+        <button class="payment-option-btn" onclick="openGCash()">📱 G-Cash</button>
+        <button class="payment-option-btn" onclick="openBank()">🏦 Online Bank</button>
+
+        <button class="close-btn" onclick="closeAllPopups()">Cancel</button>
     </div>
 </div>
 
-<div id="successPopup" class="popup">
-    <div class="popup-content success-box">
-        <h3>✅ Payment Successful!</h3>
-        <p id="successMessage"></p>
-        <button onclick="closeSuccess()">OK</button>
+<!-- GCASH POPUP -->
+<div id="gcashPopup" class="popup-overlay">
+    <div class="popup-box">
+        <h3 class="popup-header">G-Cash Payment</h3>
+
+        <img src="{{ url_for('static', filename='images/gcash.jpg') }}" class="qr-image">
+
+        <form id="gcashForm" method="POST" enctype="multipart/form-data" action="/pay/gcash">
+            <input type="hidden" id="gcashPlan" name="plan">
+            <input type="hidden" id="gcashPrice" name="price">
+
+            <label>Upload G-Cash Proof (jpg, png, pdf):</label>
+            <input type="file" name="payment_proof" accept=".jpg,.png,.pdf" required>
+
+            <button class="proceed-btn" type="submit">Proceed</button>
+        </form>
+
+        <button class="close-btn" onclick="closeAllPopups()">Cancel</button>
+    </div>
+</div>
+
+<!-- BANK POPUP -->
+<div id="bankPopup" class="popup-overlay">
+    <div class="popup-box">
+        <h3 class="popup-header">Online Bank Payment</h3>
+
+        <form id="bankForm" method="POST" action="/pay/bank">
+            <input type="hidden" id="bankPlan" name="plan">
+            <input type="hidden" id="bankPrice" name="price">
+
+            <label>Full Name:</label>
+            <input type="text" name="fullname" required>
+
+            <label>Card Number (16 digits):</label>
+            <input type="text" name="card_number" maxlength="16" pattern="[0-9]{16}" required>
+
+            <label>CVV (3 digits):</label>
+            <input type="text" name="cvv" maxlength="3" pattern="[0-9]{3}" required>
+
+            <button class="proceed-btn" type="submit">Proceed</button>
+        </form>
+
+        <button class="close-btn" onclick="closeAllPopups()">Cancel</button>
+    </div>
+</div>
+
+<!-- PROCESSING POPUP -->
+<div id="processingPopup" class="popup-overlay">
+    <div class="popup-box processing-box">
+        <h3>⏳ Processing Payment...</h3>
     </div>
 </div>
 
 <script>
-let selectedPlan = '';
+let chosenPlan = "";
+let chosenPrice = "";
 
+// OPEN PAYMENT OPTIONS
 function openPayment(plan, price) {
-    selectedPlan = plan;
-    document.getElementById("planTitle").innerText = `Join ${plan} Plan — ₱${price}`;
+    chosenPlan = plan;
+    chosenPrice = price;
+
+    document.getElementById("paymentTitle").innerText =
+        `Join ${plan} Plan — ₱${price}`;
+
     document.getElementById("paymentPopup").style.display = "flex";
 }
 
-function closePopup() {
+// OPEN GCASH
+function openGCash() {
     document.getElementById("paymentPopup").style.display = "none";
+
+    document.getElementById("gcashPlan").value = chosenPlan;
+    document.getElementById("gcashPrice").value = chosenPrice;
+
+    document.getElementById("gcashPopup").style.display = "flex";
 }
 
-function completePayment(method) {
+// OPEN BANK
+function openBank() {
     document.getElementById("paymentPopup").style.display = "none";
-    document.getElementById("successPopup").style.display = "flex";
-    document.getElementById("successMessage").innerText = `You joined ${selectedPlan} via ${method} Payment. Welcome to FightZone!`;
+
+    document.getElementById("bankPlan").value = chosenPlan;
+    document.getElementById("bankPrice").value = chosenPrice;
+
+    document.getElementById("bankPopup").style.display = "flex";
 }
 
-function closeSuccess() {
-    document.getElementById("successPopup").style.display = "none";
+// CLOSE EVERYTHING
+function closeAllPopups() {
+    document.querySelectorAll(".popup-overlay").forEach(p => p.style.display = "none");
 }
+
 </script>
+
 {% endblock %}

@@ -1,0 +1,131 @@
+{% extends "base_admin.html" %}
+{% block content %}
+
+<div class="admin-header">
+    <div class="admin-nav">
+        <a href="{{ url_for('admin_dashboard') }}" class="admin-btn">Manage Users</a>
+        <a href="{{ url_for('admin_subscriptions') }}" class="admin-btn">Subscriptions</a>
+        <a href="{{ url_for('admin_transactions') }}" class="admin-btn">Transactions</a>
+    </div>
+</div>
+
+<div class="admin-content-box">
+    <h2 class="admin-title">Membership Subscriptions Database</h2>
+
+    <div class="admin-table-container">
+        <table class="admin-table">
+            <thead>
+                <tr>
+                    <th>ID</th>
+                    <th>Name</th>
+                    <th>Email</th>
+                    <th>Payment Method</th>
+                    <th>Payment Proof</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for s in subs %}
+                <tr>
+                    <td>{{ s.id }}</td>
+                    <td>{{ s.name }}</td>
+                    <td>{{ s.email }}</td>
+                    <td>{{ s.payment_method }}</td>
+
+                    <td>
+                        {% if s.proof_file.endswith('.pdf') %}
+                            <a href="{{ url_for('static', filename='payment_proofs/' + s.proof_file) }}"
+                               class="view-btn" download>Download PDF</a>
+                        {% else %}
+                            <img src="{{ url_for('static', filename='payment_proofs/' + s.proof_file) }}"
+                                 class="proof-img" alt="proof">
+                        {% endif %}
+                    </td>
+
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<style>
+/* Table box */
+.admin-content-box {
+    width: 80%;
+    margin: auto;
+    background: #000;
+    border: 3px solid red;
+    padding: 25px;
+    border-radius: 15px;
+    box-shadow: 0 0 20px red;
+    margin-top: 40px;
+    text-align: center;
+}
+
+/* Title */
+.admin-title {
+    color: #ff2a2a;
+    margin-bottom: 20px;
+    text-shadow: 0 0 10px red;
+}
+
+/* Table */
+.admin-table-container {
+    overflow-x: auto;
+}
+
+.admin-table {
+    width: 100%;
+    border-collapse: collapse;
+    background: #1a1a1a;
+    color: white;
+}
+
+.admin-table th {
+    background: red;
+    color: black;
+    padding: 10px;
+}
+
+.admin-table td {
+    padding: 8px;
+    border-bottom: 1px solid red;
+}
+
+/* Payment proof image */
+.proof-img {
+    width: 120px;
+    height: auto;
+    border: 2px solid red;
+    border-radius: 8px;
+}
+
+/* PDF download button */
+.view-btn {
+    padding: 6px 12px;
+    background: red;
+    color: black;
+    border-radius: 8px;
+    text-decoration: none;
+    font-weight: bold;
+}
+
+.view-btn:hover {
+    background: darkred;
+}
+
+/* Top nav buttons fix */
+.admin-nav {
+    display: flex;
+    justify-content: center;
+    gap: 15px;
+    margin-top: 25px;
+}
+
+.admin-btn.active {
+    box-shadow: 0 0 10px red;
+    background: darkred;
+}
+</style>
+
+{% endblock %}

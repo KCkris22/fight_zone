@@ -1,7 +1,11 @@
-from flask import Flask, render_template, request, redirect, url_for, session
+from flask import Flask, render_template, request, redirect, url_for, session, jsonify
 from werkzeug.security import generate_password_hash, check_password_hash
+from werkzeug.utils import secure_filename
 import mysql.connector
 from mysql.connector import Error
+import os
+from datetime import datetime
+
 
 # ---------- Config ----------
 app = Flask(__name__)
@@ -13,6 +17,12 @@ DB_CONFIG = {
     "password": "",
     "database": "fight_zone"
 }
+
+UPLOAD_FOLDER = os.path.join('static', 'payment_proofs')
+ALLOWED_EXT = {'png', 'jpg', 'jpeg', 'pdf'}
+
+# ensure upload folder exists
+os.makedirs(UPLOAD_FOLDER, exist_ok=True)
 
 # ---------- DB helper ----------
 def get_db_connection():
@@ -140,7 +150,8 @@ def login():
         try:
             if check_password_hash(stored_pw, password):
                 login_success = True
-        except:
+        except Exception:
+            # fallback to plaintext check for legacy accounts
             if stored_pw == password:
                 login_success = True
 
@@ -286,6 +297,297 @@ def add_user():
 def logout():
     session.clear()
     return redirect(url_for('login'))
+
+
+# ----------------- MEMBERSHIP: SUBMIT GCASH -----------------
+@app.route('/membership/submit_gcash', methods=['POST'])
+def submit_gcash():
+    if 'user_id' not in session:
+        return jsonify({"error": "not_logged_in"}), 401
+
+    user_id = session['user_id']
+    plan = request.form.get('plan') or request.form.get('plan', '')
+    price = request.form.get('price') or request.form.get('price', 0)
+
+    proof = request.files.get('proof')
+    proof_filename = None
+
+    if proof:
+        fn = secure_filename(proof.filename)
+        ext = fn.rsplit('.', 1)[-1].lower() if '.' in fn else ''
+        if ext not in ALLOWED_EXT:
+            return jsonify({"error": "invalid_file_type"}), 400
+        # ensure unique filename
+        proof_filename = f"{user_id}_{int(__import__('time').time())}_{fn}"
+        save_path = os.path.join(UPLOAD_FOLDER, proof_filename)
+        proof.save(save_path)
+
+    try:
+        conn = get_db_connection()
+        cursor = conn.cursor()
+        cursor.execute("""
+            INSERT INTO subscriptions (user_id, plan, price, payment_method, gcash_proof, status)
+            VALUES (%s, %s, %s, %s, %s, %s)
+        """, (user_id, plan, price, "GCASH", proof_filename, "Pending"))
+        conn.commit()
+    except Error as e:
+        print("submit_gcash DB error:", e)
+        return jsonify({"error": "db_error"}), 500
+    finally:
+        try:
+            cursor.close()
+            conn.close()
+        except:
+            pass
+
+    return jsonify({"status": "ok"})
+
+
+# ----------------- MEMBERSHIP: SUBMIT BANK -----------------
+@app.route('/membership/submit_bank', methods=['POST'])
+def submit_bank():
+    if 'user_id' not in session:
+        return jsonify({"error": "not_logged_in"}), 401
+
+    user_id = session['user_id']
+    plan = request.form.get('plan') or request.form.get('plan', '')
+    price = request.form.get('price') or request.form.get('price', 0)
+
+    bank_name = request.form.get('bank_name')
+    card_number = request.form.get('card_number')
+    cvv = request.form.get('cvv')
+
+    # basic validation for numeric lengths
+    if card_number and (not card_number.isdigit() or len(card_number) not in (15,16)):
+        # allow 15 or 16 (just in case), but you requested 16
+        return jsonify({"error": "invalid_card"}), 400
+    if cvv and (not cvv.isdigit() or len(cvv) not in (3,4)):
+        return jsonify({"error": "invalid_cvv"}), 400
+
+    try:
+        conn = get_db_connection()
+        cursor = conn.cursor()
+        cursor.execute("""
+            INSERT INTO subscriptions (user_id, plan, price, payment_method, bank_name, card_number, cvv, status)
+            VALUES (%s, %s, %s, %s, %s, %s, %s, %s)
+        """, (user_id, plan, price, "BANK", bank_name, card_number, cvv, "Pending"))
+        conn.commit()
+    except Error as e:
+        print("submit_bank DB error:", e)
+        return jsonify({"error": "db_error"}), 500
+    finally:
+        try:
+            cursor.close()
+            conn.close()
+        except:
+            pass
+
+    return jsonify({"status": "ok"})
+
+
+# ----------------- ADMIN: VIEW SUBSCRIPTIONS -----------------
+@app.route('/admin/subscriptions')
+def admin_subscriptions():
+    # admin check: username equals Administrator (case-insensitive)
+    if 'user_id' not in session or session.get('username', '').lower() != 'administrator':
+        return redirect(url_for('login'))
+
+    subs = []
+    try:
+        conn = get_db_connection()
+        cursor = conn.cursor(dictionary=True)
+        cursor.execute("""
+            SELECT s.*, u.username AS requester_username, u.email AS requester_email
+            FROM subscriptions s
+            JOIN users u ON s.user_id = u.id
+            ORDER BY s.created_at DESC
+        """)
+        subs = cursor.fetchall()
+    except Error as e:
+        print("admin_subscriptions DB error:", e)
+    finally:
+        try:
+            cursor.close()
+            conn.close()
+        except:
+            pass
+
+    return render_template('admin_subscriptions.html', subs=subs)
+
+
+# ----------------- ADMIN: ACCEPT / REJECT -----------------
+@app.route('/admin/subscriptions/accept/<int:id>')
+def accept_subscription(id):
+    if 'user_id' not in session or session.get('username', '').lower() != 'administrator':
+        return redirect(url_for('login'))
+
+    try:
+        conn = get_db_connection()
+        cursor = conn.cursor()
+        cursor.execute("UPDATE subscriptions SET status = %s WHERE id = %s", ("Accepted", id))
+        conn.commit()
+    except Error as e:
+        print("accept_subscription DB error:", e)
+    finally:
+        try:
+            cursor.close()
+            conn.close()
+        except:
+            pass
+
+    return redirect(url_for('admin_subscriptions'))
+
+
+@app.route('/admin/subscriptions/reject/<int:id>')
+def reject_subscription(id):
+    if 'user_id' not in session or session.get('username', '').lower() != 'administrator':
+        return redirect(url_for('login'))
+
+    try:
+        conn = get_db_connection()
+        cursor = conn.cursor()
+        cursor.execute("UPDATE subscriptions SET status = %s WHERE id = %s", ("Rejected", id))
+        conn.commit()
+    except Error as e:
+        print("reject_subscription DB error:", e)
+    finally:
+        try:
+            cursor.close()
+            conn.close()
+        except:
+            pass
+
+    return redirect(url_for('admin_subscriptions'))
+
+@app.route('/pay/gcash', methods=['POST'])
+def pay_gcash():
+    if 'user_id' not in session:
+        return redirect('/login')
+
+    user_id = session['user_id']
+    plan = request.form.get("plan")
+    price = request.form.get("price")
+
+    file = request.files["payment_proof"]
+
+    if not file:
+        return "No file uploaded."
+
+    filename = secure_filename(file.filename)
+    save_path = os.path.join("static/payment_proofs", filename)
+    file.save(save_path)
+
+    # Insert transaction
+    conn = get_db_connection()
+    cursor = conn.cursor()
+
+    cursor.execute("""
+        INSERT INTO transactions (user_id, plan, price, method, proof_file)
+        VALUES (%s, %s, %s, 'gcash', %s)
+    """, (user_id, plan, price, filename))
+
+    conn.commit()
+    cursor.close()
+    conn.close()
+
+    return render_template("processing.html")
+
+@app.route('/pay/bank', methods=['POST'])
+def pay_bank():
+    if 'user_id' not in session:
+        return redirect('/login')
+
+    user_id = session['user_id']
+    plan = request.form.get("plan")
+    price = request.form.get("price")
+    fullname = request.form.get("fullname")
+    card_number = request.form.get("card_number")
+    cvv = request.form.get("cvv")
+
+    conn = get_db_connection()
+    cursor = conn.cursor()
+
+    cursor.execute("""
+        INSERT INTO transactions (user_id, plan, price, method, fullname, card_number, cvv)
+        VALUES (%s, %s, %s, 'bank', %s, %s, %s)
+    """, (user_id, plan, price, fullname, card_number, cvv))
+
+    conn.commit()
+    cursor.close()
+    conn.close()
+
+    return render_template("processing.html")
+
+@app.route('/admin/transactions')
+def admin_transactions():
+    if 'user_id' not in session or session.get('username', '').lower() != 'administrator':
+        return redirect('/login')
+
+    conn = get_db_connection()
+    cursor = conn.cursor(dictionary=True)
+
+    cursor.execute("SELECT t.*, u.username FROM transactions t JOIN users u ON t.user_id = u.id ORDER BY t.id DESC")
+    transactions = cursor.fetchall()
+
+    cursor.close()
+    conn.close()
+
+    return render_template('admin_transactions.html', transactions=transactions)
+
+@app.route('/admin/transactions/accept/<int:id>')
+def accept_transaction(id):
+
+    conn = get_db_connection()
+    cursor = conn.cursor(dictionary=True)
+
+    # Get transaction details
+    cursor.execute("SELECT * FROM transactions WHERE id = %s", (id,))
+    t = cursor.fetchone()
+
+    if t:
+        # Insert into subscriptions
+        cursor.execute("""
+            INSERT INTO subscriptions (user_id, plan, price, method)
+            VALUES (%s, %s, %s, %s)
+        """, (t["user_id"], t["plan"], t["price"], t["method"]))
+
+        # Delete transaction
+        cursor.execute("DELETE FROM transactions WHERE id = %s", (id,))
+
+        conn.commit()
+
+    cursor.close()
+    conn.close()
+
+    return redirect('/admin/transactions')
+
+
+@app.route('/admin/transactions/reject/<int:id>')
+def reject_transaction(id):
+
+    conn = get_db_connection()
+    cursor = conn.cursor()
+
+    cursor.execute("DELETE FROM transactions WHERE id = %s", (id,))
+    conn.commit()
+
+    cursor.close()
+    conn.close()
+
+    return redirect('/admin/transactions')
+
+@app.route("/admin_subscriptions_page")
+def admin_subscriptions_page():
+    if "admin" not in session:
+        return redirect(url_for("login"))
+
+    conn = get_db()
+    cur = conn.cursor()
+
+    cur.execute("SELECT id, name, email, payment_method, proof_file FROM subscriptions")
+    subs = cur.fetchall()
+
+    return render_template("admin_subscriptions.html", subs=subs)
 
 
 # ---------- App startup ----------
