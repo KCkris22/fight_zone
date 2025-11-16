@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Processing...</title>
+    <style>
+        body {
+            background:black;
+            color:white;
+            text-align:center;
+            font-family:Arial;
+        }
+        .box {
+            width: 50%;
+            margin:120px auto;
+            padding:30px;
+            border:3px solid red;
+            border-radius:10px;
+            box-shadow:0 0 20px red;
+        }
+        .loader {
+            width:80px;
+            height:80px;
+            border:6px solid #222;
+            border-top:6px solid red;
+            border-radius:50%;
+            animation:spin 1s linear infinite;
+            margin:20px auto;
+        }
+        @keyframes spin { to{transform:rotate(360deg);} }
+    </style>
+
+    <script>
+        setTimeout(() => {
+            window.location.href = "/membership";
+        }, 3000);
+    </script>
+</head>
+
+<body>
+<div class="box">
+    <h2>Processing Payment...</h2>
+    <div class="loader"></div>
+    <p>Please wait while we verify your payment proof.</p>
+</div>
+</body>
+</html>

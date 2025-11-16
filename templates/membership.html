@@ -3,6 +3,69 @@
 
 <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
 
+<style>
+/* POPUP STATUS MESSAGE */
+.status-popup {
+    width: 60%;
+    margin: 20px auto;
+    padding: 20px;
+    text-align: center;
+    border-radius: 12px;
+    font-weight: bold;
+    background: #111;
+    color: white;
+    box-shadow: 0 0 20px red;
+    animation: fadeIn 0.5s ease-out;
+}
+
+.status-success { border: 3px solid red; }
+.status-error { border: 3px solid darkred; }
+.status-pending { border: 3px solid #b30000; }
+
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(-10px);}
+    to { opacity: 1; transform: translateY(0);}
+}
+
+/* Hide after 5 seconds */
+.status-popup.fade-out {
+    animation: fadeOut 1s forwards;
+}
+
+@keyframes fadeOut {
+    to { opacity: 0; transform: translateY(-20px);}
+}
+</style>
+
+<!-- STATUS POPUP -->
+{% if status == 'Pending' %}
+<div id="statusBox" class="status-popup status-pending">
+    <h3>Payment Pending</h3>
+    <p>Your G-Cash payment is waiting for admin approval.</p>
+</div>
+{% elif status == 'Accepted' %}
+<div id="statusBox" class="status-popup status-success">
+    <h3>Payment Approved</h3>
+    <p>Your membership is now active!</p>
+</div>
+{% elif status == 'Rejected' %}
+<div id="statusBox" class="status-popup status-error">
+    <h3>Payment Rejected</h3>
+    <p>Please submit a valid payment proof.</p>
+</div>
+{% endif %}
+
+<script>
+// Auto fade status alert
+setTimeout(() => {
+    const box = document.getElementById("statusBox");
+    if (box) {
+        box.classList.add("fade-out");
+        setTimeout(() => box.remove(), 1000);
+    }
+}, 4000);
+</script>
+
 <section class="membership-container">
     <h2 class="membership-title">Membership Options</h2>
 
@@ -106,13 +169,6 @@
     </div>
 </div>
 
-<!-- PROCESSING POPUP -->
-<div id="processingPopup" class="popup-overlay">
-    <div class="popup-box processing-box">
-        <h3>⏳ Processing Payment...</h3>
-    </div>
-</div>
-
 <script>
 let chosenPlan = "";
 let chosenPrice = "";
@@ -148,11 +204,10 @@ function openBank() {
     document.getElementById("bankPopup").style.display = "flex";
 }
 
-// CLOSE EVERYTHING
+// CLOSE ALL POPUPS
 function closeAllPopups() {
     document.querySelectorAll(".popup-overlay").forEach(p => p.style.display = "none");
 }
-
 </script>
 
 {% endblock %}

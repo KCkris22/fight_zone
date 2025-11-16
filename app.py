@@ -6,7 +6,6 @@ from mysql.connector import Error
 import os
 from datetime import datetime
 
-
 # ---------- Config ----------
 app = Flask(__name__)
 app.secret_key = 'your_secret_key_here'  # CHANGE THIS FOR PRODUCTION
@@ -61,11 +60,9 @@ def ensure_admin():
             pass
 
 # ========== ROUTES ==========
-
 @app.route('/')
 def index():
     return redirect(url_for('login'))
-
 
 # ---------------- Register ----------------
 @app.route('/register', methods=['GET', 'POST'])
@@ -110,7 +107,6 @@ def register():
                 pass
 
     return render_template('register.html', popup_message=popup_message)
-
 
 # ---------------- Login ----------------
 @app.route('/login', methods=['GET', 'POST'])
@@ -169,7 +165,6 @@ def login():
 
     return render_template('login.html', popup_message=popup_message)
 
-
 # ---------------- User pages ----------------
 @app.route('/home')
 def home():
@@ -177,13 +172,11 @@ def home():
         return redirect(url_for('login'))
     return render_template('home.html', username=session.get('username'))
 
-
 @app.route('/about')
 def about():
     if 'user_id' not in session:
         return redirect(url_for('login'))
     return render_template('about.html', username=session.get('username'))
-
 
 @app.route('/benefits')
 def benefits():
@@ -191,13 +184,44 @@ def benefits():
         return redirect(url_for('login'))
     return render_template('benefits.html', username=session.get('username'))
 
-
 @app.route('/membership')
 def membership():
     if 'user_id' not in session:
         return redirect(url_for('login'))
-    return render_template('membership.html', username=session.get('username'))
 
+    user_id = session['user_id']
+    status = None
+
+    try:
+        conn = get_db_connection()
+        cursor = conn.cursor(dictionary=True)
+
+        cursor.execute("""
+            SELECT status 
+            FROM subscriptions 
+            WHERE user_id = %s 
+            ORDER BY id DESC 
+            LIMIT 1
+        """, (user_id,))
+        row = cursor.fetchone()
+
+        if row:
+            status = row['status']
+
+    except:
+        pass
+    finally:
+        try:
+            cursor.close()
+            conn.close()
+        except:
+            pass
+
+    return render_template(
+        'membership.html',
+        username=session.get('username'),
+        status=status
+    )
 
 # ---------------- ADMIN DASHBOARD ----------------
 @app.route('/admin_dashboard')
@@ -224,7 +248,6 @@ def admin_dashboard():
 
     return render_template('admin_dashboard.html', users=users)
 
-
 # ---------------- DELETE USER (Modal Confirm) ----------------
 @app.route('/admin/delete_user/<int:id>')
 def delete_user(id):
@@ -243,7 +266,6 @@ def delete_user(id):
     conn.close()
 
     return redirect('/admin_dashboard')
-
 
 # ---------------- EDIT USER ----------------
 @app.route('/admin/edit_user/<int:id>')
@@ -266,11 +288,9 @@ def edit_user(id):
 
     return redirect('/admin_dashboard')
 
-
 # ---------------- ADD USER ----------------
 @app.route('/admin/add_user')
 def add_user():
-
     username = request.args.get("username")
     email = request.args.get("email")
     password = request.args.get("password")
@@ -291,13 +311,11 @@ def add_user():
 
     return redirect('/admin_dashboard')
 
-
 # ---------------- LOGOUT ----------------
 @app.route('/logout')
 def logout():
     session.clear()
     return redirect(url_for('login'))
-
 
 # ----------------- MEMBERSHIP: SUBMIT GCASH -----------------
 @app.route('/membership/submit_gcash', methods=['POST'])
@@ -342,7 +360,6 @@ def submit_gcash():
 
     return jsonify({"status": "ok"})
 
-
 # ----------------- MEMBERSHIP: SUBMIT BANK -----------------
 @app.route('/membership/submit_bank', methods=['POST'])
 def submit_bank():
@@ -384,7 +401,6 @@ def submit_bank():
 
     return jsonify({"status": "ok"})
 
-
 # ----------------- ADMIN: VIEW SUBSCRIPTIONS -----------------
 @app.route('/admin/subscriptions')
 def admin_subscriptions():
@@ -396,6 +412,7 @@ def admin_subscriptions():
     try:
         conn = get_db_connection()
         cursor = conn.cursor(dictionary=True)
+        # select both the subscription fields and user info (username & email)
         cursor.execute("""
             SELECT s.*, u.username AS requester_username, u.email AS requester_email
             FROM subscriptions s
@@ -413,7 +430,6 @@ def admin_subscriptions():
             pass
 
     return render_template('admin_subscriptions.html', subs=subs)
-
 
 # ----------------- ADMIN: ACCEPT / REJECT -----------------
 @app.route('/admin/subscriptions/accept/<int:id>')
@@ -437,7 +453,6 @@ def accept_subscription(id):
 
     return redirect(url_for('admin_subscriptions'))
 
-
 @app.route('/admin/subscriptions/reject/<int:id>')
 def reject_subscription(id):
     if 'user_id' not in session or session.get('username', '').lower() != 'administrator':
@@ -459,136 +474,57 @@ def reject_subscription(id):
 
     return redirect(url_for('admin_subscriptions'))
 
-@app.route('/pay/gcash', methods=['POST'])
-def pay_gcash():
-    if 'user_id' not in session:
-        return redirect('/login')
-
-    user_id = session['user_id']
-    plan = request.form.get("plan")
-    price = request.form.get("price")
-
-    file = request.files["payment_proof"]
-
-    if not file:
-        return "No file uploaded."
-
-    filename = secure_filename(file.filename)
-    save_path = os.path.join("static/payment_proofs", filename)
-    file.save(save_path)
-
-    # Insert transaction
-    conn = get_db_connection()
-    cursor = conn.cursor()
-
-    cursor.execute("""
-        INSERT INTO transactions (user_id, plan, price, method, proof_file)
-        VALUES (%s, %s, %s, 'gcash', %s)
-    """, (user_id, plan, price, filename))
-
-    conn.commit()
-    cursor.close()
-    conn.close()
-
-    return render_template("processing.html")
-
-@app.route('/pay/bank', methods=['POST'])
-def pay_bank():
-    if 'user_id' not in session:
-        return redirect('/login')
-
-    user_id = session['user_id']
-    plan = request.form.get("plan")
-    price = request.form.get("price")
-    fullname = request.form.get("fullname")
-    card_number = request.form.get("card_number")
-    cvv = request.form.get("cvv")
-
-    conn = get_db_connection()
-    cursor = conn.cursor()
-
-    cursor.execute("""
-        INSERT INTO transactions (user_id, plan, price, method, fullname, card_number, cvv)
-        VALUES (%s, %s, %s, 'bank', %s, %s, %s)
-    """, (user_id, plan, price, fullname, card_number, cvv))
-
-    conn.commit()
-    cursor.close()
-    conn.close()
-
-    return render_template("processing.html")
-
-@app.route('/admin/transactions')
-def admin_transactions():
+# ----------------- ADMIN: DELETE SUBSCRIPTION -----------------
+@app.route('/admin/subscriptions/delete/<int:id>')
+def delete_subscription(id):
     if 'user_id' not in session or session.get('username', '').lower() != 'administrator':
-        return redirect('/login')
+        return redirect(url_for('login'))
 
-    conn = get_db_connection()
-    cursor = conn.cursor(dictionary=True)
-
-    cursor.execute("SELECT t.*, u.username FROM transactions t JOIN users u ON t.user_id = u.id ORDER BY t.id DESC")
-    transactions = cursor.fetchall()
-
-    cursor.close()
-    conn.close()
-
-    return render_template('admin_transactions.html', transactions=transactions)
-
-@app.route('/admin/transactions/accept/<int:id>')
-def accept_transaction(id):
-
-    conn = get_db_connection()
-    cursor = conn.cursor(dictionary=True)
-
-    # Get transaction details
-    cursor.execute("SELECT * FROM transactions WHERE id = %s", (id,))
-    t = cursor.fetchone()
-
-    if t:
-        # Insert into subscriptions
-        cursor.execute("""
-            INSERT INTO subscriptions (user_id, plan, price, method)
-            VALUES (%s, %s, %s, %s)
-        """, (t["user_id"], t["plan"], t["price"], t["method"]))
-
-        # Delete transaction
-        cursor.execute("DELETE FROM transactions WHERE id = %s", (id,))
-
+    try:
+        conn = get_db_connection()
+        cursor = conn.cursor()
+        cursor.execute("DELETE FROM subscriptions WHERE id = %s", (id,))
         conn.commit()
+    except Error as e:
+        print("delete_subscription DB error:", e)
+    finally:
+        try:
+            cursor.close()
+            conn.close()
+        except:
+            pass
 
-    cursor.close()
-    conn.close()
+    return redirect(url_for('admin_subscriptions'))
 
-    return redirect('/admin/transactions')
+# ----------------- ADMIN: EDIT SUBSCRIPTION (POST) -----------------
+@app.route('/admin/subscriptions/edit', methods=['POST'])
+def edit_subscription_post():
+    if 'user_id' not in session or session.get('username', '').lower() != 'administrator':
+        return redirect(url_for('login'))
 
+    sub_id = request.form.get('id')
+    plan = request.form.get('plan')
+    price = request.form.get('price')
+    status = request.form.get('status')
 
-@app.route('/admin/transactions/reject/<int:id>')
-def reject_transaction(id):
+    try:
+        conn = get_db_connection()
+        cursor = conn.cursor()
+        cursor.execute("""
+            UPDATE subscriptions SET plan = %s, price = %s, status = %s
+            WHERE id = %s
+        """, (plan, price, status, sub_id))
+        conn.commit()
+    except Error as e:
+        print("edit_subscription_post DB error:", e)
+    finally:
+        try:
+            cursor.close()
+            conn.close()
+        except:
+            pass
 
-    conn = get_db_connection()
-    cursor = conn.cursor()
-
-    cursor.execute("DELETE FROM transactions WHERE id = %s", (id,))
-    conn.commit()
-
-    cursor.close()
-    conn.close()
-
-    return redirect('/admin/transactions')
-
-@app.route("/admin_subscriptions_page")
-def admin_subscriptions_page():
-    if "admin" not in session:
-        return redirect(url_for("login"))
-
-    conn = get_db()
-    cur = conn.cursor()
-
-    cur.execute("SELECT id, name, email, payment_method, proof_file FROM subscriptions")
-    subs = cur.fetchall()
-
-    return render_template("admin_subscriptions.html", subs=subs)
-
+    return redirect(url_for('admin_subscriptions'))
 
 # ---------- App startup ----------
 if __name__ == '__main__':

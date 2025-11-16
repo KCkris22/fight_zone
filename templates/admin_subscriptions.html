@@ -1,131 +1,294 @@
 {% extends "base_admin.html" %}
 {% block content %}
 
-<div class="admin-header">
-    <div class="admin-nav">
-        <a href="{{ url_for('admin_dashboard') }}" class="admin-btn">Manage Users</a>
-        <a href="{{ url_for('admin_subscriptions') }}" class="admin-btn">Subscriptions</a>
-        <a href="{{ url_for('admin_transactions') }}" class="admin-btn">Transactions</a>
-    </div>
-</div>
+<div class="admin-page-wrapper">
 
-<div class="admin-content-box">
+    <!-- TOP PAGE NAV BUTTONS (centered) -->
+    <div class="admin-section-nav">
+        <a href="{{ url_for('admin_dashboard') }}" class="section-btn">Manage Users</a>
+        <a href="{{ url_for('admin_subscriptions') }}" class="section-btn active">Subscriptions</a>
+    </div>
+
+    <!-- PAGE TITLE -->
     <h2 class="admin-title">Membership Subscriptions Database</h2>
 
-    <div class="admin-table-container">
+    <!-- TABLE -->
+    <div class="admin-table-box">
         <table class="admin-table">
             <thead>
-                <tr>
-                    <th>ID</th>
-                    <th>Name</th>
-                    <th>Email</th>
-                    <th>Payment Method</th>
-                    <th>Payment Proof</th>
-                </tr>
+            <tr>
+                <th>ID</th>
+                <th>Name / Username</th>
+                <th>Email</th>
+                <th>Payment Method</th>
+                <th>Plan / Price</th>
+                <th>Proof</th>
+                <th>Status</th>
+                <th>Actions</th>
+            </tr>
             </thead>
             <tbody>
-                {% for s in subs %}
-                <tr>
-                    <td>{{ s.id }}</td>
-                    <td>{{ s.name }}</td>
-                    <td>{{ s.email }}</td>
-                    <td>{{ s.payment_method }}</td>
+            {% for s in subs %}
+            <tr>
+                <td>{{ s.id }}</td>
 
-                    <td>
-                        {% if s.proof_file.endswith('.pdf') %}
-                            <a href="{{ url_for('static', filename='payment_proofs/' + s.proof_file) }}"
-                               class="view-btn" download>Download PDF</a>
+                <!-- ensure display of username/email (we selected them as requester_username/requester_email) -->
+                <td>{{ s.requester_username or s.username or 'N/A' }}</td>
+                <td>{{ s.requester_email or s.email or 'N/A' }}</td>
+
+                <td>{{ (s.payment_method or s.method or '').upper() }}</td>
+                <td>{{ s.plan }} <br> ₱{{ s.price }}</td>
+
+                <td>
+                    {% if s.gcash_proof or s.payment_proof or s.proof_file %}
+                    <details>
+                        <summary class="proof-summary">View proof</summary>
+
+                        {% set pf = s.gcash_proof or s.payment_proof or s.proof_file %}
+                        {% if pf.endswith('.pdf') %}
+                        <a href="{{ url_for('static', filename='payment_proofs/' + pf) }}" target="_blank"
+                           class="view-btn">Open PDF</a><br>
+                        <a href="{{ url_for('static', filename='payment_proofs/' + pf) }}" download class="view-btn">Download
+                            PDF</a>
                         {% else %}
-                            <img src="{{ url_for('static', filename='payment_proofs/' + s.proof_file) }}"
-                                 class="proof-img" alt="proof">
+                        <img src="{{ url_for('static', filename='payment_proofs/' + pf) }}" class="proof-img">
+                        <div><a href="{{ url_for('static', filename='payment_proofs/' + pf) }}" target="_blank"
+                                class="view-btn">Open image</a></div>
                         {% endif %}
-                    </td>
+                    </details>
+                    {% else %}
+                    No Proof
+                    {% endif %}
+                </td>
 
-                </tr>
-                {% endfor %}
+                <td class="status-col">{{ s.status or 'Pending' }}</td>
+
+                <td class="actions-col">
+                    {% if (s.status or '').lower() != 'accepted' %}
+                    <a href="{{ url_for('accept_subscription', id=s.id) }}" class="action-accept"
+                       onclick="return confirm('Accept this subscription?')">Accept</a>
+                    {% else %}
+                    <span class="accepted-label">Accepted</span>
+                    {% endif %}
+
+                    {% if (s.status or '').lower() != 'rejected' %}
+                    <a href="{{ url_for('reject_subscription', id=s.id) }}" class="action-reject"
+                       onclick="return confirm('Reject this subscription?')">Reject</a>
+                    {% endif %}
+
+                    <!-- Edit button opens modal -->
+                    <button class="action-edit" onclick="openEditModal({{ s.id }}, '{{ s.plan }}', '{{ s.price }}')">
+                        Edit
+                    </button>
+
+                    <!-- Delete -->
+                    <a href="{{ url_for('delete_subscription', id=s.id) }}" class="action-delete"
+                       onclick="return confirm('Delete this subscription permanently?')">Delete</a>
+                </td>
+            </tr>
+            {% endfor %}
             </tbody>
         </table>
     </div>
 </div>
 
+<!-- EDIT SUBSCRIPTION MODAL -->
+<div id="editModal" class="modal-bg">
+    <div class="modal-box">
+        <h3>Edit Subscription</h3>
+        <form id="editForm" method="POST" action="{{ url_for('edit_subscription_post') }}">
+            <input type="hidden" name="id" id="editId">
+            <label>Plan</label>
+            <input type="text" name="plan" id="editPlan" class="modal-input">
+            <label>Price</label>
+            <input type="text" name="price" id="editPrice" class="modal-input">
+            <label>Status</label>
+            <select name="status" id="editStatus" class="modal-input">
+                <option value="Pending">Pending</option>
+                <option value="Accepted">Accepted</option>
+                <option value="Rejected">Rejected</option>
+            </select>
+            <div style="margin-top:12px;">
+                <button type="submit" class="modal-btn yes-btn">Save</button>
+                <button type="button" class="modal-btn no-btn" onclick="closeEditModal()">Cancel</button>
+            </div>
+        </form>
+    </div>
+</div>
+
 <style>
-/* Table box */
-.admin-content-box {
-    width: 80%;
-    margin: auto;
-    background: #000;
-    border: 3px solid red;
-    padding: 25px;
-    border-radius: 15px;
-    box-shadow: 0 0 20px red;
-    margin-top: 40px;
-    text-align: center;
-}
+    /* CENTERED PAGE WRAPPER */
+    .admin-page-wrapper {
+        width: 85%;
+        max-width: 1200px;
+        margin: 30px auto 60px auto;
+        text-align: center;
+    }
 
-/* Title */
-.admin-title {
-    color: #ff2a2a;
-    margin-bottom: 20px;
-    text-shadow: 0 0 10px red;
-}
+    /* NAV BUTTON BAR */
+    .admin-section-nav {
+        display: flex;
+        justify-content: center;
+        gap: 18px;
+        margin-bottom: 25px;
+    }
 
-/* Table */
-.admin-table-container {
-    overflow-x: auto;
-}
+    .section-btn {
+        background: #0d0d0d;
+        border: 2px solid red;
+        padding: 10px 20px;
+        color: red;
+        font-weight: bold;
+        border-radius: 8px;
+        text-decoration: none;
+        box-shadow: 0 0 8px rgba(255,0,0,0.08);
+    }
 
-.admin-table {
-    width: 100%;
-    border-collapse: collapse;
-    background: #1a1a1a;
-    color: white;
-}
+    .section-btn:hover {
+        background: red;
+        color: black;
+    }
 
-.admin-table th {
-    background: red;
-    color: black;
-    padding: 10px;
-}
+    .section-btn.active {
+        background: red;
+        color: black;
+        box-shadow: 0 0 12px red;
+    }
 
-.admin-table td {
-    padding: 8px;
-    border-bottom: 1px solid red;
-}
+    /* TITLE */
+    .admin-title {
+        color: red;
+        margin-bottom: 20px;
+        text-shadow: 0 0 10px red;
+    }
 
-/* Payment proof image */
-.proof-img {
-    width: 120px;
-    height: auto;
-    border: 2px solid red;
-    border-radius: 8px;
-}
+    /* TABLE BOX */
+    .admin-table-box {
+        background: #0d0d0d;
+        border: 3px solid red;
+        padding: 14px;
+        border-radius: 12px;
+        box-shadow: 0 0 16px red;
+    }
 
-/* PDF download button */
-.view-btn {
-    padding: 6px 12px;
-    background: red;
-    color: black;
-    border-radius: 8px;
-    text-decoration: none;
-    font-weight: bold;
-}
+    .admin-table {
+        width: 100%;
+        border-collapse: collapse;
+        table-layout: auto;
+    }
 
-.view-btn:hover {
-    background: darkred;
-}
+    .admin-table th {
+        background: red;
+        color: black;
+        padding: 10px;
+        text-align: center;
+    }
 
-/* Top nav buttons fix */
-.admin-nav {
-    display: flex;
-    justify-content: center;
-    gap: 15px;
-    margin-top: 25px;
-}
+    .admin-table td {
+        padding: 10px;
+        border-bottom: 1px solid rgba(255,0,0,0.15);
+        vertical-align: middle;
+        text-align: center;
+    }
 
-.admin-btn.active {
-    box-shadow: 0 0 10px red;
-    background: darkred;
-}
+    /* PROOF IMAGE */
+    .proof-img {
+        width: 140px;
+        border: 2px solid red;
+        border-radius: 8px;
+        display:block;
+        margin: 6px auto;
+    }
+
+    /* proof details summary */
+    .proof-summary {
+        cursor: pointer;
+        color: #fff;
+        background: #111;
+        border: 1px solid #660000;
+        padding: 6px 10px;
+        border-radius: 6px;
+    }
+
+    /* ACTIONS */
+    .actions-col .action-accept,
+    .actions-col .action-reject,
+    .actions-col .action-delete,
+    .actions-col .view-btn {
+        display:inline-block;
+        margin:4px 4px;
+        padding:6px 10px;
+        border-radius:6px;
+        text-decoration:none;
+        font-weight:bold;
+    }
+
+    .action-accept { background: red; color: black; }
+    .action-reject { background: #550000; color: white; border: 1px solid red; }
+    .action-delete { background: black; color: red; border: 1px solid red; }
+    .action-edit {
+        background: #ff9900;
+        color: black;
+        padding:6px 10px;
+        border-radius:6px;
+        cursor:pointer;
+        border: none;
+    }
+
+    /* accepted label */
+    .accepted-label { color: #000; background: #ffb84d; padding:6px 8px; border-radius:6px; font-weight:bold; }
+
+    /* MODAL STYLES (reuse from admin dashboard style) */
+    .modal-bg {
+        position: fixed;
+        inset: 0;
+        display:none;
+        justify-content:center;
+        align-items:center;
+        background: rgba(0,0,0,0.75);
+        z-index: 1200;
+    }
+
+    .modal-box {
+        width: 420px;
+        background: #0d0d0d;
+        border: 2px solid red;
+        padding: 18px;
+        border-radius: 12px;
+        color: white;
+        text-align: left;
+    }
+
+    .modal-input {
+        width: 100%;
+        padding: 10px;
+        margin: 8px 0;
+        background: #111;
+        border: 1px solid red;
+        color: white;
+        border-radius: 6px;
+    }
+
+    /* buttons in modal */
+    .modal-btn { padding:10px 14px; border-radius:6px; border:none; font-weight:bold; cursor:pointer; }
+    .yes-btn { background: red; }
+    .no-btn { background: #333; color:white; }
 </style>
+
+<script>
+    function openEditModal(id, plan, price){
+        document.getElementById('editId').value = id;
+        document.getElementById('editPlan').value = plan || '';
+        document.getElementById('editPrice').value = price || '';
+        // try to set status default
+        document.getElementById('editStatus').value = 'Pending';
+        document.getElementById('editModal').style.display = 'flex';
+    }
+    function closeEditModal(){
+        document.getElementById('editModal').style.display = 'none';
+    }
+</script>
+
+
 
 {% endblock %}
