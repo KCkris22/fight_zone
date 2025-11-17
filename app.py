@@ -1,4 +1,4 @@
-from flask import Flask, render_template, request, redirect, url_for, session, jsonify
+from flask import Flask, render_template, request, redirect, url_for, session, jsonify, flash
 from werkzeug.security import generate_password_hash, check_password_hash
 from werkzeug.utils import secure_filename
 import mysql.connector
@@ -17,6 +17,7 @@ DB_CONFIG = {
     "database": "fight_zone"
 }
 
+# Use payment_proofs folder (consistent with your templates)
 UPLOAD_FOLDER = os.path.join('static', 'payment_proofs')
 ALLOWED_EXT = {'png', 'jpg', 'jpeg', 'pdf'}
 
@@ -30,6 +31,7 @@ def get_db_connection():
         user=DB_CONFIG["user"],
         password=DB_CONFIG["password"],
         database=DB_CONFIG["database"],
+        auth_plugin='mysql_native_password'  # optional, depending on local config
     )
 
 # ---------- Dev convenience: ensure admin exists ----------
@@ -191,25 +193,32 @@ def membership():
 
     user_id = session['user_id']
     status = None
+    popup_message = None
 
     try:
         conn = get_db_connection()
         cursor = conn.cursor(dictionary=True)
 
         cursor.execute("""
-            SELECT status 
-            FROM subscriptions 
-            WHERE user_id = %s 
-            ORDER BY id DESC 
+            SELECT id, status, status_message
+            FROM subscriptions
+            WHERE user_id = %s
+            ORDER BY id DESC
             LIMIT 1
         """, (user_id,))
         row = cursor.fetchone()
 
         if row:
-            status = row['status']
+            status = row.get('status')
+            # status_message field used for user popup after admin action
+            popup_message = row.get('status_message')
 
-    except:
-        pass
+            # If no custom status_message but Pending, show generic Pending
+            if status == "Pending" and not popup_message:
+                popup_message = None  # membership.html will display "Payment Pending" based on status
+
+    except Exception as e:
+        print("membership fetch error:", e)
     finally:
         try:
             cursor.close()
@@ -220,7 +229,8 @@ def membership():
     return render_template(
         'membership.html',
         username=session.get('username'),
-        status=status
+        status=status,
+        popup_message=popup_message
     )
 
 # ---------------- ADMIN DASHBOARD ----------------
@@ -317,15 +327,22 @@ def logout():
     session.clear()
     return redirect(url_for('login'))
 
-# ----------------- MEMBERSHIP: SUBMIT GCASH -----------------
+# ----------------- MEMBERSHIP: SUBMIT GCASH (AJAX-style or fetch) -----------------
 @app.route('/membership/submit_gcash', methods=['POST'])
 def submit_gcash():
+    """
+    This route accepts a multipart/form-data POST with fields:
+      - plan
+      - price
+      - proof (file input name 'proof')
+    It inserts a pending subscription and returns JSON {"status":"ok"} for AJAX usage.
+    """
     if 'user_id' not in session:
         return jsonify({"error": "not_logged_in"}), 401
 
     user_id = session['user_id']
-    plan = request.form.get('plan') or request.form.get('plan', '')
-    price = request.form.get('price') or request.form.get('price', 0)
+    plan = request.form.get('plan') or ''
+    price = request.form.get('price') or 0
 
     proof = request.files.get('proof')
     proof_filename = None
@@ -338,15 +355,19 @@ def submit_gcash():
         # ensure unique filename
         proof_filename = f"{user_id}_{int(__import__('time').time())}_{fn}"
         save_path = os.path.join(UPLOAD_FOLDER, proof_filename)
-        proof.save(save_path)
+        try:
+            proof.save(save_path)
+        except Exception as e:
+            print("file save error:", e)
+            return jsonify({"error": "save_failed"}), 500
 
     try:
         conn = get_db_connection()
         cursor = conn.cursor()
         cursor.execute("""
-            INSERT INTO subscriptions (user_id, plan, price, payment_method, gcash_proof, status)
-            VALUES (%s, %s, %s, %s, %s, %s)
-        """, (user_id, plan, price, "GCASH", proof_filename, "Pending"))
+            INSERT INTO subscriptions (user_id, plan, price, payment_method, gcash_proof, status, created_at)
+            VALUES (%s, %s, %s, %s, %s, %s, %s)
+        """, (user_id, plan, price, "GCASH", proof_filename, "Pending", datetime.now()))
         conn.commit()
     except Error as e:
         print("submit_gcash DB error:", e)
@@ -358,7 +379,70 @@ def submit_gcash():
         except:
             pass
 
+    # For AJAX, return JSON so client can redirect to processing
     return jsonify({"status": "ok"})
+
+# ----------------- MEMBERSHIP: SUBMIT GCASH (form submit from membership.html) -----------------
+# keep a compatible route for forms that post to /pay/gcash (your membership.html used that)
+@app.route('/pay/gcash', methods=['POST'])
+def pay_gcash():
+    """
+    Handles form submit that uploads payment_proof file (input name 'payment_proof')
+    Redirects user to processing page after successful insert.
+    """
+    if 'user_id' not in session:
+        return redirect(url_for('login'))
+
+    user_id = session['user_id']
+    plan = request.form.get('plan')
+    price = request.form.get('price')
+
+    # Input name on your membership.html is 'payment_proof'
+    file = request.files.get('payment_proof')
+    if not file:
+        flash("No file uploaded.", "error")
+        return redirect(url_for('membership'))
+
+    filename = secure_filename(file.filename)
+    # ensure uniqueness
+    filename = f"{user_id}_{int(__import__('time').time())}_{filename}"
+    save_path = os.path.join(UPLOAD_FOLDER, filename)
+    try:
+        file.save(save_path)
+    except Exception as e:
+        print("Error saving uploaded file:", e)
+        flash("Failed to save file.", "error")
+        return redirect(url_for('membership'))
+
+    # Insert pending subscription
+    try:
+        conn = get_db_connection()
+        cursor = conn.cursor()
+        cursor.execute("""
+            INSERT INTO subscriptions (user_id, plan, price, payment_method, gcash_proof, status, created_at)
+            VALUES (%s, %s, %s, %s, %s, %s, %s)
+        """, (user_id, plan, price, "GCASH", filename, "Pending", datetime.now()))
+        conn.commit()
+    except Error as e:
+        print("pay_gcash DB error:", e)
+        flash("Database error. Try again.", "error")
+        return redirect(url_for('membership'))
+    finally:
+        try:
+            cursor.close()
+            conn.close()
+        except:
+            pass
+
+    # Redirect to processing page (processing.html auto-redirects back to membership after 3s)
+    return redirect(url_for('processing_page'))
+
+# ----- PROCESSING page (loading) -----
+@app.route('/processing')
+def processing_page():
+    if 'user_id' not in session:
+        return redirect(url_for('login'))
+    return render_template("processing.html")
 
 # ----------------- MEMBERSHIP: SUBMIT BANK -----------------
 @app.route('/membership/submit_bank', methods=['POST'])
@@ -367,8 +451,8 @@ def submit_bank():
         return jsonify({"error": "not_logged_in"}), 401
 
     user_id = session['user_id']
-    plan = request.form.get('plan') or request.form.get('plan', '')
-    price = request.form.get('price') or request.form.get('price', 0)
+    plan = request.form.get('plan') or ''
+    price = request.form.get('price') or 0
 
     bank_name = request.form.get('bank_name')
     card_number = request.form.get('card_number')
@@ -376,7 +460,6 @@ def submit_bank():
 
     # basic validation for numeric lengths
     if card_number and (not card_number.isdigit() or len(card_number) not in (15,16)):
-        # allow 15 or 16 (just in case), but you requested 16
         return jsonify({"error": "invalid_card"}), 400
     if cvv and (not cvv.isdigit() or len(cvv) not in (3,4)):
         return jsonify({"error": "invalid_cvv"}), 400
@@ -385,9 +468,9 @@ def submit_bank():
         conn = get_db_connection()
         cursor = conn.cursor()
         cursor.execute("""
-            INSERT INTO subscriptions (user_id, plan, price, payment_method, bank_name, card_number, cvv, status)
-            VALUES (%s, %s, %s, %s, %s, %s, %s, %s)
-        """, (user_id, plan, price, "BANK", bank_name, card_number, cvv, "Pending"))
+            INSERT INTO subscriptions (user_id, plan, price, payment_method, bank_name, card_number, cvv, status, created_at)
+            VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s)
+        """, (user_id, plan, price, "BANK", bank_name, card_number, cvv, "Pending", datetime.now()))
         conn.commit()
     except Error as e:
         print("submit_bank DB error:", e)
@@ -440,7 +523,9 @@ def accept_subscription(id):
     try:
         conn = get_db_connection()
         cursor = conn.cursor()
-        cursor.execute("UPDATE subscriptions SET status = %s WHERE id = %s", ("Accepted", id))
+        # Update status and add a status message that the user will see
+        cursor.execute("UPDATE subscriptions SET status = %s, status_message = %s WHERE id = %s",
+                       ("Accepted", "🎉 Your payment has been accepted!", id))
         conn.commit()
     except Error as e:
         print("accept_subscription DB error:", e)
@@ -461,7 +546,9 @@ def reject_subscription(id):
     try:
         conn = get_db_connection()
         cursor = conn.cursor()
-        cursor.execute("UPDATE subscriptions SET status = %s WHERE id = %s", ("Rejected", id))
+        # Update status and set a message for the user
+        cursor.execute("UPDATE subscriptions SET status = %s, status_message = %s WHERE id = %s",
+                       ("Rejected", "❌ Your payment was rejected. Please resubmit a valid proof.", id))
         conn.commit()
     except Error as e:
         print("reject_subscription DB error:", e)
@@ -483,6 +570,21 @@ def delete_subscription(id):
     try:
         conn = get_db_connection()
         cursor = conn.cursor()
+
+        # (Optional) delete associated uploaded file from disk if exists
+        try:
+            cursor.execute("SELECT gcash_proof FROM subscriptions WHERE id = %s", (id,))
+            row = cursor.fetchone()
+            if row and row[0]:
+                file_on_disk = os.path.join(UPLOAD_FOLDER, row[0])
+                if os.path.exists(file_on_disk):
+                    try:
+                        os.remove(file_on_disk)
+                    except Exception as e:
+                        print("Could not remove file:", e)
+        except Exception:
+            pass
+
         cursor.execute("DELETE FROM subscriptions WHERE id = %s", (id,))
         conn.commit()
     except Error as e:
@@ -525,6 +627,30 @@ def edit_subscription_post():
             pass
 
     return redirect(url_for('admin_subscriptions'))
+
+# ----------------- ADMIN: TRANSACTIONS PAGE (keeps nav link working) -----------------
+@app.route('/admin/transactions')
+def admin_transactions():
+    if 'user_id' not in session or session.get('username', '').lower() != 'administrator':
+        return redirect(url_for('login'))
+
+    transactions = []
+    try:
+        conn = get_db_connection()
+        cursor = conn.cursor(dictionary=True)
+        # fetch from transactions table if you have one
+        cursor.execute("SELECT t.*, u.username FROM transactions t JOIN users u ON t.user_id = u.id ORDER BY t.id DESC")
+        transactions = cursor.fetchall()
+    except Error as e:
+        print("admin_transactions DB error:", e)
+    finally:
+        try:
+            cursor.close()
+            conn.close()
+        except:
+            pass
+
+    return render_template('admin_transactions.html', transactions=transactions)
 
 # ---------- App startup ----------
 if __name__ == '__main__':
