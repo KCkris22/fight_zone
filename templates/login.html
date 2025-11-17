@@ -11,7 +11,7 @@
     <!-- Login Form -->
     <div class="form-container">
         <h2>Login</h2>
-        
+
         <!-- Error Messages -->
         {% if error %}
         <div class="alert alert-error">
@@ -22,11 +22,12 @@
         <form method="POST" action="/login" id="loginForm">
             <input type="text" name="email" placeholder="Email" required>
             <input type="password" name="password" placeholder="Password" required>
-            
+
+
             <div id="captchaContainer" style="display: none; margin: 15px 0; padding: 15px; background: #f5f5f5; border-radius: 5px;">
                 <p style="margin: 0 0 10px 0; font-weight: bold;">Enter the code:</p>
                 <div style="display: flex; gap: 10px; align-items: center; margin-bottom: 10px;">
-                    <span id="captchaCode" style="background: white; border: 2px solid #333; padding: 10px 20px; font-size: 24px; font-weight: bold; letter-spacing: 5px; font-family: monospace; min-width: 150px; text-align: center;">XXXX</span>
+                    <span id="captchaCode" style="background: #9e8d8d; border: 2px solid #333; padding: 10px 20px; font-size: 24px; font-weight: bold; letter-spacing: 5px; font-family: monospace; min-width: 150px; text-align: center;">XXXX</span>
                     <button type="button" onclick="generateCaptcha()" style="padding: 8px 12px; background: #ddd; border: none; border-radius: 4px; cursor: pointer;">🔄</button>
                 </div>
                 <input type="text" id="captchaInput" placeholder="Type code here" maxlength="6" style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px;">
@@ -57,7 +58,7 @@
         e.preventDefault();
 
         if (!captchaShown) {
-            
+            // First click - show CAPTCHA
             generateCaptcha();
             document.getElementById('captchaContainer').style.display = 'block';
             document.getElementById('loginBtn').textContent = 'Verify & Login';
@@ -65,6 +66,7 @@
             return;
         }
 
+        // Check CAPTCHA
         const userInput = document.getElementById('captchaInput').value.toUpperCase();
 
         if (userInput !== captchaCode) {
@@ -73,6 +75,7 @@
             return;
         }
 
+        // CAPTCHA correct - submit form
         this.submit();
     });
 </script>

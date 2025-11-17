@@ -4,14 +4,11 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="ab9c108b-3630-42bf-bdc1-087bc15d9485" name="Changes" comment="Day 1">
-      <change beforePath="$PROJECT_DIR$/.idea/fight_zone.iml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/fight_zone.iml" afterDir="false" />
+    <list default="true" id="ab9c108b-3630-42bf-bdc1-087bc15d9485" name="Changes" comment="Admin Subscription Page + Functions (for add and to delete request for gcash payment) Added">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/app.py" beforeDir="false" afterPath="$PROJECT_DIR$/app.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/static/style.css" beforeDir="false" afterPath="$PROJECT_DIR$/static/style.css" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/templates/base.html" beforeDir="false" afterPath="$PROJECT_DIR$/templates/base.html" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/templates/admin_dashboard.html" beforeDir="false" afterPath="$PROJECT_DIR$/templates/admin_dashboard.html" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/templates/admin_subscriptions.html" beforeDir="false" afterPath="$PROJECT_DIR$/templates/admin_subscriptions.html" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/templates/login.html" beforeDir="false" afterPath="$PROJECT_DIR$/templates/login.html" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/templates/register.html" beforeDir="false" afterPath="$PROJECT_DIR$/templates/register.html" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -56,13 +53,54 @@
   &quot;keyToString&quot;: {
     &quot;ModuleVcsDetector.initialDetectionPerformed&quot;: &quot;true&quot;,
     &quot;Python.app.executor&quot;: &quot;Run&quot;,
+    &quot;Python.hash.pt.executor&quot;: &quot;Run&quot;,
+    &quot;Python.hash_admin.executor&quot;: &quot;Run&quot;,
     &quot;RunOnceActivity.ShowReadmeOnStart&quot;: &quot;true&quot;,
     &quot;RunOnceActivity.TerminalTabsStorage.copyFrom.TerminalArrangementManager.252&quot;: &quot;true&quot;,
     &quot;RunOnceActivity.git.unshallow&quot;: &quot;true&quot;,
     &quot;git-widget-placeholder&quot;: &quot;master&quot;,
+    &quot;last_opened_file_path&quot;: &quot;C:/Users/CYNRIC/PycharmProjects/fight_zone/static/images&quot;,
     &quot;settings.editor.selected.configurable&quot;: &quot;com.jetbrains.python.configuration.PyActiveSdkModuleConfigurable&quot;
   }
 }</component>
+  <component name="RecentsManager">
+    <key name="CopyFile.RECENT_KEYS">
+      <recent name="C:\Users\CYNRIC\PycharmProjects\fight_zone\static\images" />
+      <recent name="C:\Users\CYNRIC\PycharmProjects\fight_zone\static" />
+    </key>
+    <key name="MoveFile.RECENT_KEYS">
+      <recent name="C:\Users\CYNRIC\PycharmProjects\fight_zone\static\images" />
+    </key>
+  </component>
+  <component name="RunManager">
+    <configuration name="app" type="PythonConfigurationType" factoryName="Python" temporary="true" nameIsGenerated="true">
+      <module name="fight_zone" />
+      <option name="ENV_FILES" value="" />
+      <option name="INTERPRETER_OPTIONS" value="" />
+      <option name="PARENT_ENVS" value="true" />
+      <envs>
+        <env name="PYTHONUNBUFFERED" value="1" />
+      </envs>
+      <option name="SDK_HOME" value="" />
+      <option name="WORKING_DIRECTORY" value="$PROJECT_DIR$" />
+      <option name="IS_MODULE_SDK" value="true" />
+      <option name="ADD_CONTENT_ROOTS" value="true" />
+      <option name="ADD_SOURCE_ROOTS" value="true" />
+      <option name="SCRIPT_NAME" value="$PROJECT_DIR$/app.py" />
+      <option name="PARAMETERS" value="" />
+      <option name="SHOW_COMMAND_LINE" value="false" />
+      <option name="EMULATE_TERMINAL" value="false" />
+      <option name="MODULE_MODE" value="false" />
+      <option name="REDIRECT_INPUT" value="false" />
+      <option name="INPUT_FILE" value="" />
+      <method v="2" />
+    </configuration>
+    <recent_temporary>
+      <list>
+        <item itemvalue="Python.app" />
+      </list>
+    </recent_temporary>
+  </component>
   <component name="SharedIndexes">
     <attachedChunks>
       <set>
@@ -86,11 +124,76 @@
       <option name="project" value="LOCAL" />
       <updated>1762846367906</updated>
     </task>
-    <option name="localTasksCounter" value="2" />
+    <task id="LOCAL-00002" summary="Log-In Page Fixed (functions and user create account)">
+      <option name="closed" value="true" />
+      <created>1762875495824</created>
+      <option name="number" value="00002" />
+      <option name="presentableId" value="LOCAL-00002" />
+      <option name="project" value="LOCAL" />
+      <updated>1762875495824</updated>
+    </task>
+    <task id="LOCAL-00003" summary="Home Page Fixed, Revised/Polished.">
+      <option name="closed" value="true" />
+      <created>1762963174709</created>
+      <option name="number" value="00003" />
+      <option name="presentableId" value="LOCAL-00003" />
+      <option name="project" value="LOCAL" />
+      <updated>1762963174709</updated>
+    </task>
+    <task id="LOCAL-00004" summary="About &amp; Benefits Page Repolished/Revised">
+      <option name="closed" value="true" />
+      <created>1763011973307</created>
+      <option name="number" value="00004" />
+      <option name="presentableId" value="LOCAL-00004" />
+      <option name="project" value="LOCAL" />
+      <updated>1763011973307</updated>
+    </task>
+    <task id="LOCAL-00005" summary="Admin account &amp; page + dashboard for admin (only) ADDED fully functioning">
+      <option name="closed" value="true" />
+      <created>1763136973782</created>
+      <option name="number" value="00005" />
+      <option name="presentableId" value="LOCAL-00005" />
+      <option name="project" value="LOCAL" />
+      <updated>1763136973782</updated>
+    </task>
+    <task id="LOCAL-00006" summary="Admin Subscription Page Added">
+      <option name="closed" value="true" />
+      <created>1763264954589</created>
+      <option name="number" value="00006" />
+      <option name="presentableId" value="LOCAL-00006" />
+      <option name="project" value="LOCAL" />
+      <updated>1763264954589</updated>
+    </task>
+    <task id="LOCAL-00007" summary="Admin Subscription Page + Functions (for add and to delete request for gcash payment) Added">
+      <option name="closed" value="true" />
+      <created>1763305400815</created>
+      <option name="number" value="00007" />
+      <option name="presentableId" value="LOCAL-00007" />
+      <option name="project" value="LOCAL" />
+      <updated>1763305400815</updated>
+    </task>
+    <option name="localTasksCounter" value="8" />
     <servers />
+  </component>
+  <component name="Vcs.Log.Tabs.Properties">
+    <option name="TAB_STATES">
+      <map>
+        <entry key="MAIN">
+          <value>
+            <State />
+          </value>
+        </entry>
+      </map>
+    </option>
   </component>
   <component name="VcsManagerConfiguration">
     <MESSAGE value="Day 1" />
-    <option name="LAST_COMMIT_MESSAGE" value="Day 1" />
+    <MESSAGE value="Log-In Page Fixed (functions and user create account)" />
+    <MESSAGE value="Home Page Fixed, Revised/Polished." />
+    <MESSAGE value="About &amp; Benefits Page Repolished/Revised" />
+    <MESSAGE value="Admin account &amp; page + dashboard for admin (only) ADDED fully functioning" />
+    <MESSAGE value="Admin Subscription Page Added" />
+    <MESSAGE value="Admin Subscription Page + Functions (for add and to delete request for gcash payment) Added" />
+    <option name="LAST_COMMIT_MESSAGE" value="Admin Subscription Page + Functions (for add and to delete request for gcash payment) Added" />
   </component>
 </project>
