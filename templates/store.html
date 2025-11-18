@@ -1,0 +1,234 @@
+{% extends "base.html" %}
+
+{% block content %}
+
+<!-- ===========================
+     POPUP NOTIFICATION MODAL
+============================== -->
+{% if popup_message %}
+<div id="notifModal" class="notif-modal">
+    <div class="notif-box modal-animate">
+        <h2 class="notif-title">Notification</h2>
+        <p class="notif-text">{{ popup_message }}</p>
+        <button class="notif-btn" onclick="closeNotif()">OK</button>
+    </div>
+</div>
+{% endif %}
+
+
+<section class="store-section">
+    <h1 class="store-title">FightZone Store</h1>
+
+    <div class="store-grid">
+
+        <!-- Product 1 -->
+        <div class="store-item">
+            <img src="{{ url_for('static', filename='images/gloves.jpg') }}" class="store-img" alt="Pro Boxing Gloves">
+            <h2>Pro Boxing Gloves</h2>
+            <p class="price-tag">₱2,499</p>
+            <button class="buy-btn" type="button" onclick="openPayment('Pro Boxing Gloves', '2499')">Buy Now</button>
+        </div>
+
+        <!-- Product 2 -->
+        <div class="store-item">
+            <img src="{{ url_for('static', filename='images/shirts.jpg') }}" class="store-img" alt="FightZone Shirt">
+            <h2>FightZone Shirt</h2>
+            <p class="price-tag">₱899</p>
+            <button class="buy-btn" type="button" onclick="openPayment('FightZone Shirt', '899')">Buy Now</button>
+        </div>
+
+        <!-- Product 3 -->
+        <div class="store-item">
+            <img src="{{ url_for('static', filename='images/handwraps.jpg') }}" class="store-img" alt="Hand Wraps">
+            <h2>Hand Wraps</h2>
+            <p class="price-tag">₱299</p>
+            <button class="buy-btn" type="button" onclick="openPayment('Hand Wraps', '299')">Buy Now</button>
+        </div>
+
+    </div>
+
+    <!-- ===========================
+         PAYMENT MODAL
+    ============================== -->
+    <div id="paymentModal" class="payment-modal" style="display:none;">
+        <div class="payment-box modal-animate">
+
+            <button class="modal-close" onclick="closePayment()">✕</button>
+
+            <h2 class="modal-title">Complete Purchase</h2>
+
+            <form action="{{ url_for('store_pay') }}" method="POST" enctype="multipart/form-data">
+                <input type="hidden" id="product_input" name="product_name">
+                <input type="hidden" id="price_input" name="price">
+
+                <label class="modal-label">Select Payment Method:</label>
+                <select name="payment_method" class="modal-input" onchange="showMethod(this.value)" required>
+                    <option value="">Choose…</option>
+                    <option value="GCASH">GCash</option>
+                    <option value="BANK">Bank</option>
+                </select>
+
+                <div id="gcash_section" class="modal-section">
+                    <label class="modal-label">Upload GCash Payment Proof</label>
+                    <input type="file" class="modal-input" name="gcash_proof">
+                </div>
+
+                <div id="bank_section" class="modal-section">
+                    <label class="modal-label">Bank Name</label>
+                    <input type="text" class="modal-input" name="bank_name" placeholder="BDO, BPI, etc">
+
+                    <label class="modal-label">Card Number</label>
+                    <input type="text" class="modal-input" name="card_number" maxlength="16">
+
+                    <label class="modal-label">CVV</label>
+                    <input type="password" class="modal-input" name="cvv" maxlength="4">
+                </div>
+
+                <button type="submit" class="modal-btn">Submit Payment</button>
+            </form>
+
+        </div>
+    </div>
+
+</section>
+
+<!-- ===========================
+     JAVASCRIPT
+============================== -->
+<script>
+function openPayment(product, price) {
+    document.getElementById("product_input").value = product;
+    document.getElementById("price_input").value = price;
+
+    document.querySelector('select[name="payment_method"]').value = "";
+    document.getElementById("gcash_section").style.display = "none";
+    document.getElementById("bank_section").style.display = "none";
+
+    document.getElementById("paymentModal").style.display = "flex";
+}
+
+function closePayment() {
+    document.getElementById("paymentModal").style.display = "none";
+}
+
+function showMethod(method) {
+    document.getElementById("gcash_section").style.display = (method === "GCASH") ? "block" : "none";
+    document.getElementById("bank_section").style.display = (method === "BANK") ? "block" : "none";
+}
+
+/* Notification Modal */
+function closeNotif() {
+    document.getElementById("notifModal").style.display = "none";
+}
+</script>
+
+<!-- ===========================
+     POPUP + PAYMENT MODAL CSS
+============================== -->
+<style>
+/* Notification Modal */
+.notif-modal {
+    position: fixed;
+    top:0; left:0;
+    width:100%; height:100%;
+    background: rgba(0,0,0,0.65);
+    display:flex;
+    justify-content:center;
+    align-items:center;
+    z-index:99999;
+}
+.notif-box {
+    background:#111;
+    border:2px solid #990000;
+    padding:25px 35px;
+    border-radius:12px;
+    color:#fff;
+    text-align:center;
+    width:350px;
+}
+.notif-title { color:#ff3333; margin-bottom:10px; }
+.notif-btn {
+    margin-top:12px;
+    padding:10px;
+    width:100%;
+    background:#ff0000;
+    border:none;
+    color:black;
+    font-weight:700;
+    border-radius:8px;
+    cursor:pointer;
+}
+.notif-btn:hover { background:#b71c1c; }
+
+/* Payment modal (unchanged from your version) */
+.payment-modal {
+    position:fixed; top:0; left:0;
+    width:100%; height:100%;
+    display:none;
+    justify-content:center;
+    align-items:center;
+    background:rgba(0,0,0,0.55);
+    backdrop-filter:blur(6px);
+    z-index:9999;
+}
+.payment-box {
+    width:380px;
+    background:#1a1a1a;
+    padding:25px;
+    border-radius:15px;
+    border:2px solid #990000;
+    color:white;
+    position:relative;
+}
+.modal-close {
+    position:absolute;
+    right:12px; top:12px;
+    background:#111;
+    color:#ffdddd;
+    border:none;
+    border-radius:50%;
+    width:34px; height:34px;
+    cursor:pointer;
+}
+.modal-title { text-align:center; color:#ff4444; }
+.modal-label { margin-top:10px; }
+.modal-input {
+    width:100%;
+    padding:10px;
+    margin-top:3px;
+    border-radius:8px;
+    background:#0d0d0d;
+    border:1px solid #660000;
+    color:white;
+}
+.modal-btn {
+    margin-top:15px; width:100%;
+    padding:10px;
+    background:#ff0000;
+    border:none;
+    color:black;
+    font-weight:900;
+    border-radius:8px;
+}
+.modal-section { display:none; }
+
+/* Store item styling */
+.store-grid { display:flex; gap:20px; flex-wrap:wrap; justify-content:center; }
+.store-item { background:#111; padding:16px; width:260px; border-radius:12px; border:2px solid #990000; }
+.store-img { width:100%; border-radius:8px; }
+.buy-btn {
+    background:#ff0000;
+    color:black;
+    border:none;
+    padding:10px;
+    margin-top:10px;
+    border-radius:8px;
+    font-weight:800;
+    cursor:pointer;
+}
+.buy-btn:hover { background:#b71c1c; }
+.store-title { color:#ff4444; text-align:center; }
+.price-tag { color:white; }
+</style>
+
+{% endblock %}

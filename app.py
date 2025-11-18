@@ -61,6 +61,41 @@ def ensure_admin():
         except:
             pass
 
+# ---------- Helper to update status robustly ----------
+def update_status(table: str, item_id: int, new_status: str, message: str = None):
+    """
+    Update status column and optionally status_message column.
+    If the status_message column doesn't exist, it will fallback to updating only status.
+    """
+    conn = None
+    cursor = None
+    try:
+        conn = get_db_connection()
+        cursor = conn.cursor()
+        if message is not None:
+            # Try to update both status and status_message (some tables may not have status_message)
+            try:
+                cursor.execute(f"UPDATE {table} SET status = %s, status_message = %s WHERE id = %s",
+                               (new_status, message, item_id))
+                conn.commit()
+                return True
+            except Error:
+                # fallback to only updating status
+                pass
+
+        cursor.execute(f"UPDATE {table} SET status = %s WHERE id = %s", (new_status, item_id))
+        conn.commit()
+        return True
+    except Exception as e:
+        print("update_status error:", e)
+        return False
+    finally:
+        try:
+            if cursor: cursor.close()
+            if conn: conn.close()
+        except:
+            pass
+
 # ========== ROUTES ==========
 @app.route('/')
 def index():
@@ -210,13 +245,8 @@ def membership():
 
         if row:
             status = row.get('status')
-            # status_message field used for user popup after admin action
             popup_message = row.get('status_message')
-
-            # If no custom status_message but Pending, show generic Pending
-            if status == "Pending" and not popup_message:
-                popup_message = None  # membership.html will display "Payment Pending" based on status
-
+            # If accepted/rejected, popup_message will be shown; if pending and no status_message, membership.html shows generic pending
     except Exception as e:
         print("membership fetch error:", e)
     finally:
@@ -232,6 +262,12 @@ def membership():
         status=status,
         popup_message=popup_message
     )
+
+@app.route('/store')
+def store():
+    if 'user_id' not in session:
+        return redirect(url_for('login'))
+    return render_template('store.html')
 
 # ---------------- ADMIN DASHBOARD ----------------
 @app.route('/admin_dashboard')
@@ -330,13 +366,6 @@ def logout():
 # ----------------- MEMBERSHIP: SUBMIT GCASH (AJAX-style or fetch) -----------------
 @app.route('/membership/submit_gcash', methods=['POST'])
 def submit_gcash():
-    """
-    This route accepts a multipart/form-data POST with fields:
-      - plan
-      - price
-      - proof (file input name 'proof')
-    It inserts a pending subscription and returns JSON {"status":"ok"} for AJAX usage.
-    """
     if 'user_id' not in session:
         return jsonify({"error": "not_logged_in"}), 401
 
@@ -379,17 +408,11 @@ def submit_gcash():
         except:
             pass
 
-    # For AJAX, return JSON so client can redirect to processing
     return jsonify({"status": "ok"})
 
-# ----------------- MEMBERSHIP: SUBMIT GCASH (form submit from membership.html) -----------------
-# keep a compatible route for forms that post to /pay/gcash (your membership.html used that)
+# ----------------- MEMBERSHIP: PAY GCASH (form) -----------------
 @app.route('/pay/gcash', methods=['POST'])
 def pay_gcash():
-    """
-    Handles form submit that uploads payment_proof file (input name 'payment_proof')
-    Redirects user to processing page after successful insert.
-    """
     if 'user_id' not in session:
         return redirect(url_for('login'))
 
@@ -397,14 +420,12 @@ def pay_gcash():
     plan = request.form.get('plan')
     price = request.form.get('price')
 
-    # Input name on your membership.html is 'payment_proof'
     file = request.files.get('payment_proof')
     if not file:
         flash("No file uploaded.", "error")
         return redirect(url_for('membership'))
 
     filename = secure_filename(file.filename)
-    # ensure uniqueness
     filename = f"{user_id}_{int(__import__('time').time())}_{filename}"
     save_path = os.path.join(UPLOAD_FOLDER, filename)
     try:
@@ -414,7 +435,6 @@ def pay_gcash():
         flash("Failed to save file.", "error")
         return redirect(url_for('membership'))
 
-    # Insert pending subscription
     try:
         conn = get_db_connection()
         cursor = conn.cursor()
@@ -434,7 +454,6 @@ def pay_gcash():
         except:
             pass
 
-    # Redirect to processing page (processing.html auto-redirects back to membership after 3s)
     return redirect(url_for('processing_page'))
 
 # ----- PROCESSING page (loading) -----
@@ -484,25 +503,110 @@ def submit_bank():
 
     return jsonify({"status": "ok"})
 
-# ----------------- ADMIN: VIEW SUBSCRIPTIONS -----------------
-@app.route('/admin/subscriptions')
+@app.route('/store/pay', methods=['POST'])
+def store_pay():
+    if 'user_id' not in session:
+        return redirect(url_for('login'))
+
+    user_id = session['user_id']
+    product = request.form.get('product_name')
+    price = request.form.get('price')
+    method = request.form.get('payment_method')
+
+    gcash_proof_filename = None
+
+    # Handle GCash upload
+    if method == "GCASH":
+        file = request.files.get('gcash_proof')
+        if file:
+            filename = secure_filename(file.filename)
+            gcash_proof_filename = f"{user_id}_{int(__import__('time').time())}_{filename}"
+            try:
+                file.save(os.path.join(UPLOAD_FOLDER, gcash_proof_filename))
+            except Exception as e:
+                print("store file save error:", e)
+                flash("Failed to save proof file.", "error")
+                return redirect(url_for('store'))
+
+    bank_name = request.form.get('bank_name') if method == "BANK" else None
+    card_number = request.form.get('card_number') if method == "BANK" else None
+    cvv = request.form.get('cvv') if method == "BANK" else None
+
+    try:
+        conn = get_db_connection()
+        cursor = conn.cursor()
+        cursor.execute("""
+            INSERT INTO store_orders
+                (user_id, product_name, price, payment_method, gcash_proof, bank_name, card_number, cvv, status, created_at)
+            VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
+        """, (user_id, product, price, method, gcash_proof_filename, bank_name, card_number, cvv, "Pending", datetime.now()))
+        conn.commit()
+    except Error as e:
+        print("store_pay DB error:", e)
+        flash("Database error. Try again.", "error")
+        return redirect(url_for('store'))
+    finally:
+        try:
+            cursor.close()
+            conn.close()
+        except:
+            pass
+
+    return redirect(url_for('processing_page'))
+
+# ----------------- ADMIN: VIEW (unified) SUBSCRIPTIONS + STORE ORDERS -----------------
+@app.route("/admin/subscriptions")
 def admin_subscriptions():
-    # admin check: username equals Administrator (case-insensitive)
+    # admin check
     if 'user_id' not in session or session.get('username', '').lower() != 'administrator':
         return redirect(url_for('login'))
 
-    subs = []
+    combined = []
     try:
         conn = get_db_connection()
         cursor = conn.cursor(dictionary=True)
-        # select both the subscription fields and user info (username & email)
+
+        # fetch membership subscriptions
         cursor.execute("""
-            SELECT s.*, u.username AS requester_username, u.email AS requester_email
+            SELECT
+                s.id,
+                s.user_id,
+                u.username AS requester_username,
+                u.email AS requester_email,
+                s.payment_method,
+                s.plan AS item,
+                s.price,
+                s.gcash_proof AS proof,
+                s.status,
+                s.created_at,
+                'membership' AS type
             FROM subscriptions s
-            JOIN users u ON s.user_id = u.id
-            ORDER BY s.created_at DESC
+            LEFT JOIN users u ON s.user_id = u.id
         """)
-        subs = cursor.fetchall()
+        mem = cursor.fetchall()
+
+        # fetch store orders
+        cursor.execute("""
+            SELECT
+                o.id,
+                o.user_id,
+                u.username AS requester_username,
+                u.email AS requester_email,
+                o.payment_method,
+                o.product_name AS item,
+                o.price,
+                o.gcash_proof AS proof,
+                o.status,
+                o.created_at,
+                'store' AS type
+            FROM store_orders o
+            LEFT JOIN users u ON o.user_id = u.id
+        """)
+        store = cursor.fetchall()
+
+        combined = (mem or []) + (store or [])
+        combined.sort(key=lambda r: r.get('created_at') or datetime.min, reverse=True)
+
     except Error as e:
         print("admin_subscriptions DB error:", e)
     finally:
@@ -512,58 +616,43 @@ def admin_subscriptions():
         except:
             pass
 
-    return render_template('admin_subscriptions.html', subs=subs)
+    return render_template('admin_subscriptions.html', subs=combined)
 
-# ----------------- ADMIN: ACCEPT / REJECT -----------------
-@app.route('/admin/subscriptions/accept/<int:id>')
-def accept_subscription(id):
+# ----------------- ADMIN: ACCEPT / REJECT (unified for membership+store) -----------------
+@app.route('/admin/transactions/accept/<string:typ>/<int:id>')
+def admin_accept(typ, id):
     if 'user_id' not in session or session.get('username', '').lower() != 'administrator':
         return redirect(url_for('login'))
 
+    message = "✅ Your payment has been accepted!"
     try:
-        conn = get_db_connection()
-        cursor = conn.cursor()
-        # Update status and add a status message that the user will see
-        cursor.execute("UPDATE subscriptions SET status = %s, status_message = %s WHERE id = %s",
-                       ("Accepted", "🎉 Your payment has been accepted!", id))
-        conn.commit()
+        if typ == 'membership':
+            update_status('subscriptions', id, 'Accepted', message)
+        elif typ == 'store':
+            update_status('store_orders', id, 'Accepted', message)
     except Error as e:
-        print("accept_subscription DB error:", e)
-    finally:
-        try:
-            cursor.close()
-            conn.close()
-        except:
-            pass
+        print("admin_accept error:", e)
 
     return redirect(url_for('admin_subscriptions'))
 
-@app.route('/admin/subscriptions/reject/<int:id>')
-def reject_subscription(id):
+@app.route('/admin/transactions/reject/<string:typ>/<int:id>')
+def admin_reject(typ, id):
     if 'user_id' not in session or session.get('username', '').lower() != 'administrator':
         return redirect(url_for('login'))
 
+    message = "❌ Your payment was rejected. Please resubmit a valid proof."
     try:
-        conn = get_db_connection()
-        cursor = conn.cursor()
-        # Update status and set a message for the user
-        cursor.execute("UPDATE subscriptions SET status = %s, status_message = %s WHERE id = %s",
-                       ("Rejected", "❌ Your payment was rejected. Please resubmit a valid proof.", id))
-        conn.commit()
+        if typ == 'membership':
+            update_status('subscriptions', id, 'Rejected', message)
+        elif typ == 'store':
+            update_status('store_orders', id, 'Rejected', message)
     except Error as e:
-        print("reject_subscription DB error:", e)
-    finally:
-        try:
-            cursor.close()
-            conn.close()
-        except:
-            pass
+        print("admin_reject error:", e)
 
     return redirect(url_for('admin_subscriptions'))
 
-# ----------------- ADMIN: DELETE SUBSCRIPTION -----------------
-@app.route('/admin/subscriptions/delete/<int:id>')
-def delete_subscription(id):
+@app.route('/admin/transactions/delete/<string:typ>/<int:id>')
+def admin_delete(typ, id):
     if 'user_id' not in session or session.get('username', '').lower() != 'administrator':
         return redirect(url_for('login'))
 
@@ -571,24 +660,32 @@ def delete_subscription(id):
         conn = get_db_connection()
         cursor = conn.cursor()
 
-        # (Optional) delete associated uploaded file from disk if exists
-        try:
-            cursor.execute("SELECT gcash_proof FROM subscriptions WHERE id = %s", (id,))
-            row = cursor.fetchone()
-            if row and row[0]:
-                file_on_disk = os.path.join(UPLOAD_FOLDER, row[0])
-                if os.path.exists(file_on_disk):
-                    try:
-                        os.remove(file_on_disk)
-                    except Exception as e:
-                        print("Could not remove file:", e)
-        except Exception:
-            pass
+        # remove file if exists (gcash_proof)
+        tbl = 'subscriptions' if typ == 'membership' else 'store_orders'
+        cursor.execute(f"SELECT gcash_proof FROM {tbl} WHERE id = %s", (id,))
+        row = cursor.fetchone()
 
-        cursor.execute("DELETE FROM subscriptions WHERE id = %s", (id,))
+        proof_filename = None
+        if row:
+            # cursor may return tuple or dict depending on cursor type
+            if isinstance(row, dict):
+                proof_filename = row.get('gcash_proof')
+            else:
+                proof_filename = row[0]
+
+        if proof_filename:
+            file_on_disk = os.path.join(UPLOAD_FOLDER, proof_filename)
+            if os.path.exists(file_on_disk):
+                try:
+                    os.remove(file_on_disk)
+                except Exception as e:
+                    print("Could not remove file:", e)
+
+        # delete row
+        cursor.execute(f"DELETE FROM {tbl} WHERE id = %s", (id,))
         conn.commit()
     except Error as e:
-        print("delete_subscription DB error:", e)
+        print("admin_delete error:", e)
     finally:
         try:
             cursor.close()
@@ -638,8 +735,40 @@ def admin_transactions():
     try:
         conn = get_db_connection()
         cursor = conn.cursor(dictionary=True)
-        # fetch from transactions table if you have one
-        cursor.execute("SELECT t.*, u.username FROM transactions t JOIN users u ON t.user_id = u.id ORDER BY t.id DESC")
+
+        # union the two tables, then order by created_at
+        cursor.execute("""
+            SELECT * FROM (
+                SELECT
+                    s.id,
+                    s.user_id,
+                    u.username,
+                    s.payment_method,
+                    s.plan AS item,
+                    s.price,
+                    s.gcash_proof AS proof,
+                    s.status,
+                    'membership' AS type,
+                    s.created_at
+                FROM subscriptions s
+                JOIN users u ON s.user_id = u.id
+                UNION ALL
+                SELECT
+                    o.id,
+                    o.user_id,
+                    u.username,
+                    o.payment_method,
+                    o.product_name AS item,
+                    o.price,
+                    o.gcash_proof AS proof,
+                    o.status,
+                    'store' AS type,
+                    o.created_at
+                FROM store_orders o
+                JOIN users u ON o.user_id = u.id
+            ) AS alltx
+            ORDER BY created_at DESC
+        """)
         transactions = cursor.fetchall()
     except Error as e:
         print("admin_transactions DB error:", e)
@@ -651,6 +780,7 @@ def admin_transactions():
             pass
 
     return render_template('admin_transactions.html', transactions=transactions)
+
 
 # ---------- App startup ----------
 if __name__ == '__main__':
