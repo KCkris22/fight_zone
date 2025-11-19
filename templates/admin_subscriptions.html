@@ -37,7 +37,10 @@
                 <td>{{ s.requester_username or 'N/A' }}</td>
                 <td>{{ s.requester_email or 'N/A' }}</td>
                 <td>{{ (s.payment_method or '').upper() }}</td>
-                <td style="max-width:220px; white-space:normal;">{{ s.item }}</td>
+
+                <!-- Option 1: show Type — Item -->
+                <td style="max-width:220px; white-space:normal;">{{ s.type|capitalize }} — {{ s.item }}</td>
+
                 <td>₱{{ s.price }}</td>
 
                 <td>
@@ -64,13 +67,15 @@
                 <td class="actions-col">
                     {% set t = s.type %}
                     {% if (s.status or '').lower() != 'accepted' %}
-                    <button class="action-accept" onclick="openConfirmModal('{{ t }}', {{ s.id }}, 'accept', '{{ s.item|e }}')">Accept</button>
+                    <a href="#" class="action-accept"
+                       onclick="openConfirmModal('accept','{{ t }}', {{ s.id }}, '{{ (s.item|e) }}')">Accept</a>
                     {% else %}
                     <span class="accepted-label">Accepted</span>
                     {% endif %}
 
                     {% if (s.status or '').lower() != 'rejected' %}
-                    <button class="action-reject" onclick="openConfirmModal('{{ t }}', {{ s.id }}, 'reject', '{{ s.item|e }}')">Reject</button>
+                    <a href="#" class="action-reject"
+                       onclick="openConfirmModal('reject','{{ t }}', {{ s.id }}, '{{ (s.item|e) }}')">Reject</a>
                     {% endif %}
 
                     <button class="action-edit" onclick="openEditModal({{ s.id }}, '{{ s.item|e }}', '{{ s.price }}')">
@@ -78,7 +83,8 @@
                     </button>
 
                     <!-- Delete -->
-                    <button class="action-delete" onclick="openConfirmModal('{{ t }}', {{ s.id }}, 'delete', '{{ s.item|e }}')">Delete</button>
+                    <a href="#" class="action-delete"
+                       onclick="openConfirmModal('delete','{{ t }}', {{ s.id }}, '{{ (s.item|e) }}')">Delete</a>
                 </td>
             </tr>
             {% endfor %}
@@ -111,71 +117,56 @@
     </div>
 </div>
 
-<!-- NEON CYBER RED CONFIRMATION MODAL (same styling) -->
-<div id="confirmModal" class="neon-modal" style="display:none;">
-    <div class="neon-box">
-        <div class="neon-header">
-            <span id="neonIcon">⚠️</span>
-            <h3 id="neonTitle">Confirm Action</h3>
-        </div>
+<!-- Reuse same confirm modal used in transactions page -->
+<div id="confirmModal" class="confirm-modal" style="display:none;">
+    <div class="confirm-box">
+        <h3 id="confirmTitle">Confirm action</h3>
+        <p id="confirmMessage" style="margin-bottom:18px;"></p>
 
-        <div class="neon-body">
-            <p id="neonMessage">Are you sure?</p>
-            <div class="neon-meta">
-                <span><strong>Type:</strong> <span id="neonType"></span></span>
-                <span><strong>Item:</strong> <span id="neonItem"></span></span>
-                <span><strong>ID:</strong> <span id="neonId"></span></span>
-            </div>
+        <div class="confirm-actions">
+            <a id="confirmYes" href="#" class="confirm-yes">Yes</a>
+            <button onclick="closeConfirmModal()" class="confirm-no">Cancel</button>
         </div>
-
-        <div class="neon-actions">
-            <button id="neonConfirmBtn" class="neon-btn confirm">Confirm</button>
-            <button onclick="closeConfirmModal()" class="neon-btn cancel">Cancel</button>
-        </div>
-
-        <button class="neon-close" onclick="closeConfirmModal()">✕</button>
     </div>
 </div>
 
 <style>
-/* keep theme consistent */
-.admin-page-wrapper { width: 85%; max-width: 1200px; margin: 30px auto 60px auto; text-align: center; }
-.admin-section-nav { display:flex; justify-content:center; gap:18px; margin-bottom:25px; }
-.section-btn { background:#0d0d0d; border:2px solid red; padding:10px 20px; color:red; border-radius:8px; text-decoration:none; font-weight:bold; }
-.section-btn.active { background:red; color:black; }
-.admin-title { color:red; margin-bottom:20px; text-shadow:0 0 10px red; }
-.admin-table-box { background:#0d0d0d; border:3px solid red; padding:14px; border-radius:12px; box-shadow:0 0 16px red; }
-.admin-table { width:100%; border-collapse:collapse; table-layout:auto; }
-.admin-table th { background:red; color:black; padding:10px; text-align:center; }
-.admin-table td { padding:10px; border-bottom:1px solid rgba(255,0,0,0.15); vertical-align:middle; text-align:center; }
-.proof-img { width:140px; border:2px solid red; border-radius:8px; display:block; margin:6px auto; }
-.proof-summary { cursor:pointer; color:#fff; background:#111; border:1px solid #660000; padding:6px 10px; border-radius:6px; }
-.action-accept, .action-reject, .action-delete, .view-btn { display:inline-block; margin:4px 4px; padding:6px 10px; border-radius:6px; text-decoration:none; font-weight:bold; cursor:pointer; }
-.action-accept { background:red; color:black; }
-.action-reject { background:#550000; color:white; border:1px solid red; }
-.action-delete { background:black; color:red; border:1px solid red; }
-.action-edit { background:#ff9900; color:black; padding:6px 10px; border-radius:6px; cursor:pointer; border:none; }
-.accepted-label { color:#000; background:#ffb84d; padding:6px 8px; border-radius:6px; font-weight:bold; }
+    /* Centering & nav */
+    .admin-page-wrapper { width:85%; max-width:1200px; margin:30px auto 60px auto; text-align:center; }
+    .admin-section-nav { display:flex; justify-content:center; gap:18px; margin-bottom:25px; }
+    .section-btn { background:#0d0d0d; border:2px solid red; padding:10px 20px; color:red; font-weight:bold; border-radius:8px; text-decoration:none; }
+    .section-btn.active { background:red; color:black; }
 
-/* modal styles (edit modal) */
-.modal-bg { position:fixed; inset:0; display:none; justify-content:center; align-items:center; background: rgba(0,0,0,0.75); z-index:1200; }
-.modal-box { width:420px; background:#0d0d0d; border:2px solid red; padding:18px; border-radius:12px; color:white; text-align:left; }
-.modal-input { width:100%; padding:10px; margin:8px 0; background:#111; border:1px solid red; color:white; border-radius:6px; }
-.modal-btn { padding:10px 14px; border-radius:6px; border:none; font-weight:bold; cursor:pointer; }
-.yes-btn { background:red; } .no-btn { background:#333; color:white; }
+    .admin-title { color:red; margin-bottom:20px; text-shadow:0 0 10px red; }
+    .admin-table-box { background:#0d0d0d; border:3px solid red; padding:14px; border-radius:12px; box-shadow:0 0 16px red; }
+    .admin-table { width:100%; border-collapse:collapse; table-layout:auto; }
+    .admin-table th { background:red; color:black; padding:10px; text-align:center; }
+    .admin-table td { padding:10px; border-bottom:1px solid rgba(255,0,0,0.15); vertical-align:middle; text-align:center; }
 
-/* NEON modal styles (reuse from transactions template) */
-.neon-modal { position: fixed; inset: 0; display: flex; align-items: center; justify-content: center; background: rgba(0,0,0,0.8); z-index: 20000; backdrop-filter: blur(4px); }
-.neon-box { width: 480px; background: linear-gradient(180deg, rgba(10,10,10,0.98), rgba(5,5,5,0.98)); border-radius: 14px; padding: 18px 20px 22px 20px; box-shadow: 0 10px 40px rgba(255,0,0,0.08), 0 0 30px rgba(255,0,0,0.06); border: 2px solid rgba(255,0,0,0.22); position: relative; animation: neonPop .22s ease-out; }
-@keyframes neonPop { from { opacity: 0; transform: scale(.98) } to { opacity:1; transform: scale(1) } }
-.neon-header { display:flex; align-items:center; gap:12px; margin-bottom:12px; }
-#neonIcon { font-size:22px; color:#ff5555; } #neonTitle { color:#ff4444; margin:0; font-size:20px; letter-spacing:0.6px; }
-.neon-body { color:#ddd; font-size:15px; margin-bottom:12px; } .neon-meta { margin-top:8px; display:flex; gap:12px; justify-content:space-between; color:#bbb; font-size:13px; flex-wrap:wrap; }
-.neon-actions { display:flex; gap:10px; justify-content:flex-end; margin-top:12px; }
-.neon-btn { padding:10px 14px; border-radius:8px; border:none; font-weight:800; cursor:pointer; }
-.neon-btn.confirm { background: linear-gradient(90deg,#ff0000,#b71c1c); color:black; box-shadow: 0 6px 18px rgba(255,0,0,0.12); }
-.neon-btn.cancel { background:#111; color:#fff; border:1px solid #330000; }
-.neon-close { position:absolute; top:10px; right:10px; width:36px; height:36px; background:#111; color:#ffcccc; border-radius:50%; border:1px solid #550000; cursor:pointer; }
+    .proof-img { width:140px; border:2px solid red; border-radius:8px; display:block; margin:6px auto; }
+    .proof-summary { cursor:pointer; color:#fff; background:#111; border:1px solid #660000; padding:6px 10px; border-radius:6px; }
+
+    .action-accept { background:red; color:black; padding:6px 10px; border-radius:6px; text-decoration:none; }
+    .action-reject { background:#550000; color:white; padding:6px 10px; border-radius:6px; text-decoration:none; border:1px solid red; }
+    .action-delete { background:black; color:red; padding:6px 10px; border-radius:6px; text-decoration:none; border:1px solid red; }
+    .action-edit { background:#ff9900; color:black; padding:6px 10px; border-radius:6px; cursor:pointer; border:none; }
+
+    .accepted-label { color:#000; background:#ffb84d; padding:6px 8px; border-radius:6px; font-weight:bold; }
+
+    /* Edit modal */
+    .modal-bg { position:fixed; inset:0; display:none; justify-content:center; align-items:center; background: rgba(0,0,0,0.75); z-index:1200; }
+    .modal-box { width:420px; background:#0d0d0d; border:2px solid red; padding:18px; border-radius:12px; color:white; text-align:left; }
+    .modal-input { width:100%; padding:10px; margin:8px 0; background:#111; border:1px solid red; color:white; border-radius:6px; }
+    .modal-btn { padding:10px 14px; border-radius:6px; border:none; font-weight:bold; cursor:pointer; }
+    .yes-btn { background:red; } .no-btn { background:#333; color:white; }
+
+    /* Confirm modal (same as transactions page) */
+    .confirm-modal { position: fixed; inset:0; display:flex; align-items:center; justify-content:center; background: rgba(0,0,0,0.7); z-index:12000; }
+    .confirm-box { width:420px; background:#0d0d0d; border:2px solid red; padding:20px; border-radius:12px; color:white; text-align:center; box-shadow: 0 10px 30px rgba(0,0,0,0.6); }
+    .confirm-box h3 { color:#ff4444; margin-bottom:10px; }
+    .confirm-actions { display:flex; gap:12px; justify-content:center; margin-top:6px; }
+    .confirm-yes { background: red; color: black; padding:8px 14px; border-radius:8px; text-decoration:none; font-weight:800; }
+    .confirm-no { background:#333; color:white; padding:8px 14px; border-radius:8px; border:none; cursor:pointer; }
 </style>
 
 <script>
@@ -190,52 +181,32 @@
         document.getElementById('editModal').style.display = 'none';
     }
 
-    // Neon confirm modal logic (same as transactions page)
-    function openConfirmModal(type, id, action, item) {
-        document.getElementById('neonType').innerText = type;
-        document.getElementById('neonItem').innerText = item;
-        document.getElementById('neonId').innerText = id;
-
-        let title = '';
-        let msg = '';
-        let icon = '⚠️';
-        if (action === 'accept') {
-            title = 'Confirm Accept';
-            msg = `You are about to ACCEPT this ${type} payment for "${item}". This will mark it as Accepted and notify the user. Proceed?`;
-            icon = '✅';
-            document.getElementById('neonConfirmBtn').innerText = 'Accept';
-        } else if (action === 'reject') {
-            title = 'Confirm Reject';
-            msg = `You are about to REJECT this ${type} payment for "${item}". This will mark it as Rejected and notify the user. Proceed?`;
-            icon = '❌';
-            document.getElementById('neonConfirmBtn').innerText = 'Reject';
-        } else {
-            title = 'Confirm Delete';
-            msg = `You are about to DELETE this ${type} record for "${item}". This cannot be undone. Proceed?`;
-            icon = '🗑️';
-            document.getElementById('neonConfirmBtn').innerText = 'Delete';
-        }
-
-        document.getElementById('neonTitle').innerText = title;
-        document.getElementById('neonMessage').innerText = msg;
-        document.getElementById('neonIcon').innerText = icon;
-
-        const confirmBtn = document.getElementById('neonConfirmBtn');
-        confirmBtn.onclick = function(){
-            const base = '/admin/transactions';
-            let target = '';
-            if (action === 'accept') target = `${base}/accept/${type}/${id}`;
-            if (action === 'reject') target = `${base}/reject/${type}/${id}`;
-            if (action === 'delete') target = `${base}/delete/${type}/${id}`;
-            window.location.href = target;
-        };
-
+    // Confirm modal functions (reused)
+    function openConfirmModal(action, typ, id, item) {
         document.getElementById('confirmModal').style.display = 'flex';
+        const title = document.getElementById('confirmTitle');
+        const msg = document.getElementById('confirmMessage');
+        const yes = document.getElementById('confirmYes');
+
+        const prettyItem = (item || '').replace(/'/g, "\\'");
+
+        if (action === 'accept') {
+            title.innerText = 'Accept Payment';
+            msg.innerText = `Accept this ${typ} payment for "${prettyItem}" ?`;
+            yes.href = `/admin/transactions/accept/${typ}/${id}`;
+        } else if (action === 'reject') {
+            title.innerText = 'Reject Payment';
+            msg.innerText = `Reject this ${typ} payment for "${prettyItem}" ?`;
+            yes.href = `/admin/transactions/reject/${typ}/${id}`;
+        } else if (action === 'delete') {
+            title.innerText = 'Delete Record';
+            msg.innerText = `Delete this ${typ} record for "${prettyItem}" permanently? This cannot be undone.`;
+            yes.href = `/admin/transactions/delete/${typ}/${id}`;
+        }
     }
 
     function closeConfirmModal(){
         document.getElementById('confirmModal').style.display = 'none';
-        document.getElementById('neonConfirmBtn').onclick = null;
     }
 </script>
 

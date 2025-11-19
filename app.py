@@ -65,7 +65,8 @@ def ensure_admin():
 def update_status(table: str, item_id: int, new_status: str, message: str = None):
     """
     Update status column and optionally status_message column.
-    If the status_message column doesn't exist, it will fallback to updating only status.
+    If status_message column doesn't exist, it falls back to updating only status.
+    Returns True/False.
     """
     conn = None
     cursor = None
@@ -91,8 +92,10 @@ def update_status(table: str, item_id: int, new_status: str, message: str = None
         return False
     finally:
         try:
-            if cursor: cursor.close()
-            if conn: conn.close()
+            if cursor:
+                cursor.close()
+            if conn:
+                conn.close()
         except:
             pass
 
@@ -246,7 +249,6 @@ def membership():
         if row:
             status = row.get('status')
             popup_message = row.get('status_message')
-            # If accepted/rejected, popup_message will be shown; if pending and no status_message, membership.html shows generic pending
     except Exception as e:
         print("membership fetch error:", e)
     finally:
@@ -464,36 +466,40 @@ def processing_page():
     return render_template("processing.html")
 
 # ----------------- MEMBERSHIP: SUBMIT BANK -----------------
-@app.route('/membership/submit_bank', methods=['POST'])
-def submit_bank():
+@app.route('/pay/bank', methods=['POST'])
+def pay_bank():
     if 'user_id' not in session:
-        return jsonify({"error": "not_logged_in"}), 401
+        return redirect(url_for('login'))
 
-    user_id = session['user_id']
-    plan = request.form.get('plan') or ''
-    price = request.form.get('price') or 0
-
-    bank_name = request.form.get('bank_name')
+    plan = request.form.get('plan')
+    price = request.form.get('price')
+    fullname = request.form.get('fullname')
     card_number = request.form.get('card_number')
     cvv = request.form.get('cvv')
-
-    # basic validation for numeric lengths
-    if card_number and (not card_number.isdigit() or len(card_number) not in (15,16)):
-        return jsonify({"error": "invalid_card"}), 400
-    if cvv and (not cvv.isdigit() or len(cvv) not in (3,4)):
-        return jsonify({"error": "invalid_cvv"}), 400
 
     try:
         conn = get_db_connection()
         cursor = conn.cursor()
-        cursor.execute("""
-            INSERT INTO subscriptions (user_id, plan, price, payment_method, bank_name, card_number, cvv, status, created_at)
-            VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s)
-        """, (user_id, plan, price, "BANK", bank_name, card_number, cvv, "Pending", datetime.now()))
+
+        sql = """
+            INSERT INTO subscriptions (user_id, plan, price, payment_method, gcash_proof, status)
+            VALUES (%s, %s, %s, %s, %s, %s)
+        """
+        cursor.execute(sql, (
+            session['user_id'],
+            plan,
+            price,
+            "Bank",
+            None,
+            "Pending"
+        ))
+
         conn.commit()
-    except Error as e:
-        print("submit_bank DB error:", e)
-        return jsonify({"error": "db_error"}), 500
+
+    except Exception as e:
+        print("pay_bank ERROR:", e)
+        return redirect(url_for('membership', status="error"))
+
     finally:
         try:
             cursor.close()
@@ -501,7 +507,10 @@ def submit_bank():
         except:
             pass
 
-    return jsonify({"status": "ok"})
+    # ⭐ Send user to processing loading screen
+    return redirect(url_for('processing_page'))
+
+
 
 @app.route('/store/pay', methods=['POST'])
 def store_pay():

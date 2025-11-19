@@ -41,7 +41,7 @@
 {% if status == 'Pending' %}
 <div id="statusBox" class="status-popup status-pending">
     <h3>Payment Pending</h3>
-    <p>Your G-Cash payment is waiting for admin approval.</p>
+    <p>Your Payment is waiting for admin approval.</p>
 </div>
 {% elif status == 'Accepted' %}
 <div id="statusBox" class="status-popup status-success">
@@ -149,7 +149,7 @@ setTimeout(() => {
     <div class="popup-box">
         <h3 class="popup-header">Online Bank Payment</h3>
 
-        <form id="bankForm" method="POST" action="/pay/bank">
+        <form id="bankForm" method="POST" action="{{ url_for('pay_bank') }}">
             <input type="hidden" id="bankPlan" name="plan">
             <input type="hidden" id="bankPrice" name="price">
 
