@@ -511,7 +511,6 @@ def pay_bank():
     return redirect(url_for('processing_page'))
 
 
-
 @app.route('/store/pay', methods=['POST'])
 def store_pay():
     if 'user_id' not in session:
@@ -522,38 +521,74 @@ def store_pay():
     price = request.form.get('price')
     method = request.form.get('payment_method')
 
-    gcash_proof_filename = None
+    if not product or not price or not method:
+        flash("Invalid order data.", "error")
+        return redirect(url_for('store'))
 
-    # Handle GCash upload
+    gcash_proof_filename = None
+    card_number = None
+    cvv = None
+
+    # ==========================
+    # GCASH PAYMENT HANDLING
+    # ==========================
     if method == "GCASH":
         file = request.files.get('gcash_proof')
-        if file:
-            filename = secure_filename(file.filename)
-            gcash_proof_filename = f"{user_id}_{int(__import__('time').time())}_{filename}"
-            try:
-                file.save(os.path.join(UPLOAD_FOLDER, gcash_proof_filename))
-            except Exception as e:
-                print("store file save error:", e)
-                flash("Failed to save proof file.", "error")
-                return redirect(url_for('store'))
 
-    bank_name = request.form.get('bank_name') if method == "BANK" else None
-    card_number = request.form.get('card_number') if method == "BANK" else None
-    cvv = request.form.get('cvv') if method == "BANK" else None
+        if not file or file.filename == "":
+            flash("Please upload your G-Cash payment proof.", "error")
+            return redirect(url_for('store'))
 
+        filename = secure_filename(file.filename)
+        gcash_proof_filename = f"{user_id}_{int(__import__('time').time())}_{filename}"
+
+        try:
+            file.save(os.path.join(UPLOAD_FOLDER, gcash_proof_filename))
+        except Exception as e:
+            print("GCash upload error:", e)
+            flash("Failed to save payment proof.", "error")
+            return redirect(url_for('store'))
+
+    # ==========================
+    # BANK PAYMENT HANDLING
+    # ==========================
+    elif method == "BANK":
+        card_number = request.form.get('card_number')
+        cvv = request.form.get('cvv')
+
+        if not card_number or not cvv:
+            flash("Bank information incomplete.", "error")
+            return redirect(url_for('store'))
+
+    # Unknown method
+    else:
+        flash("Invalid payment method.", "error")
+        return redirect(url_for('store'))
+
+    # ==========================
+    # SAVE ORDER TO DATABASE
+    # ==========================
     try:
         conn = get_db_connection()
         cursor = conn.cursor()
+
         cursor.execute("""
             INSERT INTO store_orders
-                (user_id, product_name, price, payment_method, gcash_proof, bank_name, card_number, cvv, status, created_at)
-            VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
-        """, (user_id, product, price, method, gcash_proof_filename, bank_name, card_number, cvv, "Pending", datetime.now()))
+                (user_id, product_name, price, payment_method, gcash_proof, card_number, cvv, status, created_at)
+            VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s)
+        """, (
+            user_id, product, price, method,
+            gcash_proof_filename, card_number, cvv,
+            "Pending", datetime.now()
+        ))
+
         conn.commit()
+
     except Error as e:
         print("store_pay DB error:", e)
-        flash("Database error. Try again.", "error")
+        flash("Database error. Please try again.", "error")
         return redirect(url_for('store'))
+
     finally:
         try:
             cursor.close()
@@ -561,7 +596,9 @@ def store_pay():
         except:
             pass
 
+    # Redirect user to your "Processing..." screen
     return redirect(url_for('processing_page'))
+
 
 # ----------------- ADMIN: VIEW (unified) SUBSCRIPTIONS + STORE ORDERS -----------------
 @app.route("/admin/subscriptions")

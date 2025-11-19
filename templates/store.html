@@ -2,9 +2,6 @@
 
 {% block content %}
 
-<!-- ===========================
-     POPUP NOTIFICATION MODAL
-============================== -->
 {% if popup_message %}
 <div id="notifModal" class="notif-modal">
     <div class="notif-box modal-animate">
@@ -15,220 +12,227 @@
 </div>
 {% endif %}
 
-
 <section class="store-section">
     <h1 class="store-title">FightZone Store</h1>
 
     <div class="store-grid">
 
         <!-- Product 1 -->
-        <div class="store-item">
-            <img src="{{ url_for('static', filename='images/gloves.jpg') }}" class="store-img" alt="Pro Boxing Gloves">
-            <h2>Pro Boxing Gloves</h2>
-            <p class="price-tag">₱2,499</p>
-            <button class="buy-btn" type="button" onclick="openPayment('Pro Boxing Gloves', '2499')">Buy Now</button>
+        <div class="store-card">
+            <img src="{{ url_for('static', filename='images/gloves.jpg') }}" class="store-pic">
+            <h3>Pro Boxing Gloves</h3>
+            <p class="price">₱2,499</p>
+            <button class="store-btn" onclick="openPayment('Pro Boxing Gloves', 2499)">Buy Now</button>
         </div>
 
         <!-- Product 2 -->
-        <div class="store-item">
-            <img src="{{ url_for('static', filename='images/shirts.jpg') }}" class="store-img" alt="FightZone Shirt">
-            <h2>FightZone Shirt</h2>
-            <p class="price-tag">₱899</p>
-            <button class="buy-btn" type="button" onclick="openPayment('FightZone Shirt', '899')">Buy Now</button>
+        <div class="store-card">
+            <img src="{{ url_for('static', filename='images/shirts.jpg') }}" class="store-pic">
+            <h3>FightZone Shirt</h3>
+            <p class="price">₱899</p>
+            <button class="store-btn" onclick="openPayment('FightZone Shirt', 899)">Buy Now</button>
         </div>
 
         <!-- Product 3 -->
-        <div class="store-item">
-            <img src="{{ url_for('static', filename='images/handwraps.jpg') }}" class="store-img" alt="Hand Wraps">
-            <h2>Hand Wraps</h2>
-            <p class="price-tag">₱299</p>
-            <button class="buy-btn" type="button" onclick="openPayment('Hand Wraps', '299')">Buy Now</button>
+        <div class="store-card">
+            <img src="{{ url_for('static', filename='images/handwraps.jpg') }}" class="store-pic">
+            <h3>Hand Wraps</h3>
+            <p class="price">₱299</p>
+            <button class="store-btn" onclick="openPayment('Hand Wraps', 299)">Buy Now</button>
+        </div>
+
+        <!-- Product 4 -->
+        <div class="store-card">
+            <img src="{{ url_for('static', filename='images/jumprope.jpg') }}" class="store-pic">
+            <h3>Jump Rope</h3>
+            <p class="price">₱499</p>
+            <button class="store-btn" onclick="openPayment('Jump Rope', 499)">Buy Now</button>
+        </div>
+
+        <!-- Product 5 -->
+        <div class="store-card">
+            <img src="{{ url_for('static', filename='images/mittpads.jpg') }}" class="store-pic">
+            <h3>Mitt Pads</h3>
+            <p class="price">₱1,299</p>
+            <button class="store-btn" onclick="openPayment('Mitt Pads', 1299)">Buy Now</button>
+        </div>
+
+        <!-- Product 6 -->
+        <div class="store-card">
+            <img src="{{ url_for('static', filename='images/mouthguard.jpg') }}" class="store-pic">
+            <h3>Mouth Guard</h3>
+            <p class="price">₱199</p>
+            <button class="store-btn" onclick="openPayment('Mouth Guard', 199)">Buy Now</button>
+        </div>
+
+        <!-- Product 7 -->
+        <div class="store-card">
+            <img src="{{ url_for('static', filename='images/wallbag.jpg') }}" class="store-pic">
+            <h3>Wall Bag</h3>
+            <p class="price">₱2,999</p>
+            <button class="store-btn" onclick="openPayment('Wall Bag', 2999)">Buy Now</button>
+        </div>
+
+        <!-- Product 8 -->
+        <div class="store-card">
+            <img src="{{ url_for('static', filename='images/boxingshoes.jpg') }}" class="store-pic">
+            <h3>Boxing Shoes</h3>
+            <p class="price">₱3,499</p>
+            <button class="store-btn" onclick="openPayment('Boxing Shoes', 3499)">Buy Now</button>
         </div>
 
     </div>
-
-    <!-- ===========================
-         PAYMENT MODAL
-    ============================== -->
-    <div id="paymentModal" class="payment-modal" style="display:none;">
-        <div class="payment-box modal-animate">
-
-            <button class="modal-close" onclick="closePayment()">✕</button>
-
-            <h2 class="modal-title">Complete Purchase</h2>
-
-            <form action="{{ url_for('store_pay') }}" method="POST" enctype="multipart/form-data">
-                <input type="hidden" id="product_input" name="product_name">
-                <input type="hidden" id="price_input" name="price">
-
-                <label class="modal-label">Select Payment Method:</label>
-                <select name="payment_method" class="modal-input" onchange="showMethod(this.value)" required>
-                    <option value="">Choose…</option>
-                    <option value="GCASH">GCash</option>
-                    <option value="BANK">Bank</option>
-                </select>
-
-                <div id="gcash_section" class="modal-section">
-                    <label class="modal-label">Upload GCash Payment Proof</label>
-                    <input type="file" class="modal-input" name="gcash_proof">
-                </div>
-
-                <div id="bank_section" class="modal-section">
-                    <label class="modal-label">Bank Name</label>
-                    <input type="text" class="modal-input" name="bank_name" placeholder="BDO, BPI, etc">
-
-                    <label class="modal-label">Card Number</label>
-                    <input type="text" class="modal-input" name="card_number" maxlength="16">
-
-                    <label class="modal-label">CVV</label>
-                    <input type="password" class="modal-input" name="cvv" maxlength="4">
-                </div>
-
-                <button type="submit" class="modal-btn">Submit Payment</button>
-            </form>
-
-        </div>
-    </div>
-
 </section>
 
-<!-- ===========================
-     JAVASCRIPT
-============================== -->
+
+<!-- ============================
+      PAYMENT CHOICE POPUP
+=============================== -->
+<div id="paymentPopup" class="popup-overlay">
+    <div class="popup-box">
+        <h3 id="storePopupTitle" class="popup-header"></h3>
+        <p>Select a payment method:</p>
+
+        <button class="payment-option-btn" onclick="openStoreGCash()">📱 G-Cash</button>
+        <button class="payment-option-btn" onclick="openStoreBank()">🏦 Online Bank</button>
+
+        <button class="close-btn" onclick="closeAllPopups()">Cancel</button>
+    </div>
+</div>
+
+<!-- ============================
+      STORE G-CASH POPUP
+=============================== -->
+<div id="storeGCashPopup" class="popup-overlay">
+    <div class="popup-box">
+        <h3 class="popup-header">G-Cash Payment</h3>
+
+        <img src="{{ url_for('static', filename='images/gcash.jpg') }}" class="qr-image">
+
+        <form method="POST" enctype="multipart/form-data" action="{{ url_for('store_pay') }}">
+            <input type="hidden" id="storeProduct" name="product_name">
+            <input type="hidden" id="storePrice" name="price">
+            <input type="hidden" name="payment_method" value="GCASH">
+
+            <label>Upload G-Cash Proof (jpg, png, pdf):</label>
+            <input type="file" name="gcash_proof" accept=".jpg,.png,.pdf" required>
+
+            <button class="proceed-btn" type="submit">Proceed</button>
+        </form>
+
+        <button class="close-btn" onclick="closeAllPopups()">Cancel</button>
+    </div>
+</div>
+
+<!-- ============================
+      STORE BANK POPUP
+=============================== -->
+<div id="storeBankPopup" class="popup-overlay">
+    <div class="popup-box">
+        <h3 class="popup-header">Online Bank Payment</h3>
+
+        <form method="POST" action="{{ url_for('store_pay') }}">
+            <input type="hidden" id="storeProductBank" name="product_name">
+            <input type="hidden" id="storePriceBank" name="price">
+            <input type="hidden" name="payment_method" value="BANK">
+
+            <label>Full Name:</label>
+            <input type="text" name="fullname" required>
+
+            <label>Card Number:</label>
+            <input type="text" maxlength="16" pattern="[0-9]{16}" name="card_number" required>
+
+            <label>CVV:</label>
+            <input type="text" maxlength="3" pattern="[0-9]{3}" name="cvv" required>
+
+            <button class="proceed-btn" type="submit">Proceed</button>
+        </form>
+
+        <button class="close-btn" onclick="closeAllPopups()">Cancel</button>
+    </div>
+</div>
+
 <script>
+// OPEN STORE PAYMENT
+let storeProduct = "";
+let storePrice = "";
+
 function openPayment(product, price) {
-    document.getElementById("product_input").value = product;
-    document.getElementById("price_input").value = price;
+    storeProduct = product;
+    storePrice = price;
 
-    document.querySelector('select[name="payment_method"]').value = "";
-    document.getElementById("gcash_section").style.display = "none";
-    document.getElementById("bank_section").style.display = "none";
+    document.getElementById("storePopupTitle").innerText =
+        `Buy ${product} — ₱${price}`;
 
-    document.getElementById("paymentModal").style.display = "flex";
+    document.getElementById("paymentPopup").style.display = "flex";
 }
 
-function closePayment() {
-    document.getElementById("paymentModal").style.display = "none";
+// OPEN STORE GCASH
+function openStoreGCash() {
+    document.getElementById("paymentPopup").style.display = "none";
+
+    document.getElementById("storeProduct").value = storeProduct;
+    document.getElementById("storePrice").value = storePrice;
+
+    document.getElementById("storeGCashPopup").style.display = "flex";
 }
 
-function showMethod(method) {
-    document.getElementById("gcash_section").style.display = (method === "GCASH") ? "block" : "none";
-    document.getElementById("bank_section").style.display = (method === "BANK") ? "block" : "none";
+// OPEN BANK
+function openStoreBank() {
+    document.getElementById("paymentPopup").style.display = "none";
+
+    document.getElementById("storeProductBank").value = storeProduct;
+    document.getElementById("storePriceBank").value = storePrice;
+
+    document.getElementById("storeBankPopup").style.display = "flex";
 }
 
-/* Notification Modal */
-function closeNotif() {
-    document.getElementById("notifModal").style.display = "none";
+function closeAllPopups() {
+    document.querySelectorAll(".popup-overlay")
+        .forEach(p => p.style.display = "none");
 }
 </script>
 
-<!-- ===========================
-     POPUP + PAYMENT MODAL CSS
-============================== -->
 <style>
-/* Notification Modal */
-.notif-modal {
+/* Reuse your membership popup styling */
+.popup-overlay {
     position: fixed;
     top:0; left:0;
-    width:100%; height:100%;
-    background: rgba(0,0,0,0.65);
-    display:flex;
-    justify-content:center;
-    align-items:center;
-    z-index:99999;
-}
-.notif-box {
-    background:#111;
-    border:2px solid #990000;
-    padding:25px 35px;
-    border-radius:12px;
-    color:#fff;
-    text-align:center;
-    width:350px;
-}
-.notif-title { color:#ff3333; margin-bottom:10px; }
-.notif-btn {
-    margin-top:12px;
-    padding:10px;
-    width:100%;
-    background:#ff0000;
-    border:none;
-    color:black;
-    font-weight:700;
-    border-radius:8px;
-    cursor:pointer;
-}
-.notif-btn:hover { background:#b71c1c; }
-
-/* Payment modal (unchanged from your version) */
-.payment-modal {
-    position:fixed; top:0; left:0;
     width:100%; height:100%;
     display:none;
     justify-content:center;
     align-items:center;
-    background:rgba(0,0,0,0.55);
-    backdrop-filter:blur(6px);
-    z-index:9999;
+    background: rgba(0,0,0,0.8);
+    z-index: 9999;
 }
-.payment-box {
-    width:380px;
-    background:#1a1a1a;
-    padding:25px;
-    border-radius:15px;
-    border:2px solid #990000;
-    color:white;
-    position:relative;
-}
-.modal-close {
-    position:absolute;
-    right:12px; top:12px;
+.popup-box {
     background:#111;
-    color:#ffdddd;
-    border:none;
-    border-radius:50%;
-    width:34px; height:34px;
-    cursor:pointer;
+    border:3px solid red;
+    box-shadow:0 0 20px red;
+    padding:20px;
+    width:380px;
+    color:white;
+    border-radius:12px;
+    text-align:center;
 }
-.modal-title { text-align:center; color:#ff4444; }
-.modal-label { margin-top:10px; }
-.modal-input {
+.payment-option-btn,
+.proceed-btn,
+.close-btn {
     width:100%;
     padding:10px;
-    margin-top:3px;
-    border-radius:8px;
-    background:#0d0d0d;
-    border:1px solid #660000;
-    color:white;
-}
-.modal-btn {
-    margin-top:15px; width:100%;
-    padding:10px;
-    background:#ff0000;
-    border:none;
-    color:black;
-    font-weight:900;
-    border-radius:8px;
-}
-.modal-section { display:none; }
-
-/* Store item styling */
-.store-grid { display:flex; gap:20px; flex-wrap:wrap; justify-content:center; }
-.store-item { background:#111; padding:16px; width:260px; border-radius:12px; border:2px solid #990000; }
-.store-img { width:100%; border-radius:8px; }
-.buy-btn {
-    background:#ff0000;
-    color:black;
-    border:none;
-    padding:10px;
     margin-top:10px;
+    background:red;
+    border:none;
+    color:black;
+    font-weight:bold;
     border-radius:8px;
-    font-weight:800;
     cursor:pointer;
 }
-.buy-btn:hover { background:#b71c1c; }
-.store-title { color:#ff4444; text-align:center; }
-.price-tag { color:white; }
+.qr-image {
+    width:220px;
+    display:block;
+    margin:10px auto;
+}
 </style>
 
 {% endblock %}
