@@ -4,11 +4,16 @@ from werkzeug.utils import secure_filename
 import mysql.connector
 from mysql.connector import Error
 import os
-from datetime import datetime
+from datetime import datetime, timedelta
+import random
+import smtplib
+import ssl
+from email.mime.text import MIMEText
+from email.mime.multipart import MIMEMultipart
 
 # ---------- Config ----------
 app = Flask(__name__)
-app.secret_key = 'your_secret_key_here'  # CHANGE THIS FOR PRODUCTION
+app.secret_key = 'your_secret_key_here'
 
 DB_CONFIG = {
     "host": "localhost",
@@ -17,7 +22,13 @@ DB_CONFIG = {
     "database": "fight_zone"
 }
 
-# Use payment_proofs folder (consistent with your templates)
+# Email (placeholder)
+EMAIL_SENDER = "magalloncynric@gmail.com"
+EMAIL_APP_PASSWORD = "lehb diih shza rmnx"
+EMAIL_SMTP = "smtp.gmail.com"
+EMAIL_PORT = 465
+
+# Use payment_proofs folder
 UPLOAD_FOLDER = os.path.join('static', 'payment_proofs')
 ALLOWED_EXT = {'png', 'jpg', 'jpeg', 'pdf'}
 
@@ -31,7 +42,7 @@ def get_db_connection():
         user=DB_CONFIG["user"],
         password=DB_CONFIG["password"],
         database=DB_CONFIG["database"],
-        auth_plugin='mysql_native_password'  # optional, depending on local config
+        auth_plugin='mysql_native_password'
     )
 
 # ---------- Dev convenience: ensure admin exists ----------
@@ -99,6 +110,46 @@ def update_status(table: str, item_id: int, new_status: str, message: str = None
         except:
             pass
 
+# ---------- OTP / Email helpers ----------
+def generate_otp(length=6):
+    """Return a numeric OTP as string."""
+    start = 10**(length-1)
+    return str(random.randint(start, start * 10 - 1))
+
+
+def send_otp_email(recipient_email, otp_code):
+    """Send OTP to user's email using Gmail SMTP. Returns True if sent successfully."""
+
+    subject = "FightZone — Your Verification Code"
+
+    body = (
+        f"Greetings Champ!,\n\n"
+        f"Your FightZone verification code is:\n\n"
+        f"🔐 OTP: {otp_code}\n\n"
+        f"If you did not request this, simply ignore this email.\n\n"
+        f"— FightZone Security Team"
+    )
+
+    # Build proper MIME email
+    msg = MIMEMultipart()
+    msg["From"] = EMAIL_SENDER
+    msg["To"] = recipient_email
+    msg["Subject"] = subject
+    msg.attach(MIMEText(body, "plain", "utf-8"))
+
+    try:
+        context = ssl.create_default_context()
+        with smtplib.SMTP_SSL(EMAIL_SMTP, EMAIL_PORT, context=context) as server:
+            server.login(EMAIL_SENDER, EMAIL_APP_PASSWORD)
+            server.sendmail(EMAIL_SENDER, recipient_email, msg.as_string())
+
+        print("OTP email sent successfully!")
+        return True
+
+    except Exception as e:
+        print("send_otp_email ERROR:", e)
+        return False
+
 # ========== ROUTES ==========
 @app.route('/')
 def index():
@@ -107,7 +158,13 @@ def index():
 # ---------------- Register ----------------
 @app.route('/register', methods=['GET', 'POST'])
 def register():
+    """
+    Mode A: OTP BEFORE account creation.
+    - On POST: validate inputs, uniqueness, generate OTP, send email, store pending data in session.
+    - Redirect user to /verify_otp to input code.
+    """
     popup_message = None
+
     if request.method == 'POST':
         username = request.form.get('username', '').strip()
         email = request.form.get('email', '').strip()
@@ -117,28 +174,15 @@ def register():
             popup_message = "⚠️ Please fill all fields."
             return render_template('register.html', popup_message=popup_message)
 
+        # Check uniqueness
         try:
             conn = get_db_connection()
             cursor = conn.cursor(dictionary=True)
-
-            cursor.execute("SELECT * FROM users WHERE username = %s OR email = %s",
-                           (username, email))
+            cursor.execute("SELECT * FROM users WHERE username = %s OR email = %s", (username, email))
             existing = cursor.fetchone()
-
-            if existing:
-                popup_message = "⚠️ Username or Email already exists!"
-            else:
-                hashed_password = generate_password_hash(password)
-                cursor.execute(
-                    "INSERT INTO users (username, email, password) VALUES (%s, %s, %s)",
-                    (username, email, hashed_password)
-                )
-                conn.commit()
-                popup_message = "✅ Account created successfully!"
-
         except Error as e:
-            print("Register DB error:", e)
-            popup_message = "⚠️ Database error."
+            print("Register DB error (check existing):", e)
+            existing = None
         finally:
             try:
                 cursor.close()
@@ -146,7 +190,121 @@ def register():
             except:
                 pass
 
-    return render_template('register.html', popup_message=popup_message)
+        if existing:
+            popup_message = "⚠️ Username or Email already exists!"
+            return render_template('register.html', popup_message=popup_message)
+
+        # generate OTP and attempt to send email
+        otp = generate_otp(6)
+        sent = send_otp_email(email, otp)
+
+        if not sent:
+            popup_message = "⚠️ Failed to send verification email. Please try again later."
+            return render_template('register.html', popup_message=popup_message)
+
+        # store pending registration in session until OTP verified (expires in 10 minutes)
+        expiry = (datetime.utcnow() + timedelta(minutes=10)).isoformat()
+        session['pending_registration'] = {
+            "username": username,
+            "email": email,
+            "password_hash": generate_password_hash(password),
+            "otp": otp,
+            "otp_expires_at": expiry
+        }
+
+        # redirect to verification page
+        return redirect(url_for('verify_otp'))
+
+    return render_template('register.html', popup_message=None)
+
+# ---------------- Verify OTP ----------------
+@app.route('/verify_otp', methods=['GET', 'POST'])
+def verify_otp():
+    """
+    Page for entering OTP sent to email.
+    On success: create user in DB and clear pending_registration from session.
+    """
+    pending = session.get('pending_registration')
+    if not pending:
+        flash("No pending registration. Please register first.", "error")
+        return redirect(url_for('register'))
+
+    if request.method == 'POST':
+        code = request.form.get('otp_code', '').strip()
+        if not code:
+            return render_template('verify_otp.html', error="Please enter the code sent to your email.")
+
+        # check expiry
+        try:
+            expires_at = datetime.fromisoformat(pending['otp_expires_at'])
+        except Exception:
+            expires_at = datetime.utcnow() - timedelta(seconds=1)
+
+        if datetime.utcnow() > expires_at:
+            # expired
+            session.pop('pending_registration', None)
+            return render_template('verify_otp.html', error="OTP expired. Please register again.")
+
+        if code != pending.get('otp'):
+            return render_template('verify_otp.html', error="Incorrect code. Try again.")
+
+        # All good — create user
+        try:
+            conn = get_db_connection()
+            cursor = conn.cursor()
+            cursor.execute("""
+                INSERT INTO users (username, email, password)
+                VALUES (%s, %s, %s)
+            """, (pending['username'], pending['email'], pending['password_hash']))
+            conn.commit()
+        except Error as e:
+            print("verify_otp DB insert error:", e)
+            return render_template('verify_otp.html', error="Database error while creating account.")
+        finally:
+            try:
+                cursor.close()
+                conn.close()
+            except:
+                pass
+
+        # Clear pending and redirect to login with success
+        session.pop('pending_registration', None)
+        flash("✅ Account verified and created! You may now log in.", "success")
+        return redirect(url_for('login'))
+
+    # GET: show form and mask email a bit
+    masked_email = None
+    if pending and 'email' in pending:
+        em = pending['email']
+        parts = em.split("@")
+        if len(parts[0]) > 2:
+            masked_local = parts[0][0] + "*"*(len(parts[0])-2) + parts[0][-1]
+        else:
+            masked_local = parts[0][0] + "*"
+        masked_email = masked_local + "@" + parts[1]
+
+    return render_template('verify_otp.html', masked_email=masked_email)
+
+# Resend OTP route (in case user requests)
+@app.route('/resend_otp')
+def resend_otp():
+    pending = session.get('pending_registration')
+    if not pending:
+        flash("No pending registration to resend OTP for.", "error")
+        return redirect(url_for('register'))
+
+    new_otp = generate_otp(6)
+    sent = send_otp_email(pending['email'], new_otp)
+    if not sent:
+        flash("Failed to resend OTP. Try again later.", "error")
+        return redirect(url_for('verify_otp'))
+
+    # update session pending
+    pending['otp'] = new_otp
+    pending['otp_expires_at'] = (datetime.utcnow() + timedelta(minutes=10)).isoformat()
+    session['pending_registration'] = pending
+    flash("A new code was sent to your email.", "success")
+    return redirect(url_for('verify_otp'))
 
 # ---------------- Login ----------------
 @app.route('/login', methods=['GET', 'POST'])
@@ -465,7 +623,7 @@ def processing_page():
         return redirect(url_for('login'))
     return render_template("processing.html")
 
-# ----------------- MEMBERSHIP: SUBMIT BANK -----------------
+# ----------------- MEMBERSHIP: PAY BANK (form) -----------------
 @app.route('/pay/bank', methods=['POST'])
 def pay_bank():
     if 'user_id' not in session:
@@ -482,16 +640,17 @@ def pay_bank():
         cursor = conn.cursor()
 
         sql = """
-            INSERT INTO subscriptions (user_id, plan, price, payment_method, gcash_proof, status)
-            VALUES (%s, %s, %s, %s, %s, %s)
+            INSERT INTO subscriptions (user_id, plan, price, payment_method, gcash_proof, status, created_at)
+            VALUES (%s, %s, %s, %s, %s, %s, %s)
         """
         cursor.execute(sql, (
             session['user_id'],
             plan,
             price,
-            "Bank",
+            "BANK",
             None,
-            "Pending"
+            "Pending",
+            datetime.now()
         ))
 
         conn.commit()
@@ -510,7 +669,7 @@ def pay_bank():
     # ⭐ Send user to processing loading screen
     return redirect(url_for('processing_page'))
 
-
+# ----------------- STORE PAY -----------------
 @app.route('/store/pay', methods=['POST'])
 def store_pay():
     if 'user_id' not in session:
@@ -598,7 +757,6 @@ def store_pay():
 
     # Redirect user to your "Processing..." screen
     return redirect(url_for('processing_page'))
-
 
 # ----------------- ADMIN: VIEW (unified) SUBSCRIPTIONS + STORE ORDERS -----------------
 @app.route("/admin/subscriptions")

@@ -3,16 +3,24 @@
 
 <body class="register-page">
 
-    <!-- ✅ Centered Logo (No red banner) -->
+    <!-- Centered Logo -->
     <div class="logo-container">
         <div class="logo-box">
             <span class="logo-text">🥊 FightZone 🥊</span>
         </div>
     </div>
 
-    <!-- ✅ Register Form -->
+    <!-- Register Form -->
     <div class="form-container">
         <h2>Join the Fight Zone</h2>
+
+        {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+            {% for cat, msg in messages %}
+                <div class="flash {{ cat }}">{{ msg }}</div>
+            {% endfor %}
+        {% endif %}
+        {% endwith %}
 
         {% if popup_message %}
         <div id="popup" class="popup">
@@ -23,11 +31,11 @@
         </div>
         {% endif %}
 
-        <form method="POST">
+        <form method="POST" novalidate>
             <input type="text" name="username" placeholder="Choose Username" required>
             <input type="email" name="email" placeholder="Enter Email" required>
             <input type="password" name="password" placeholder="Enter Password" required>
-            <button type="submit">CREATE ACCOUNT</button>
+            <button type="submit">REQUEST VERIFICATION CODE</button>
         </form>
 
         <p>Already have an account? <a href="{{ url_for('login') }}">Login here</a></p>
@@ -46,6 +54,12 @@
     });
     </script>
 
+    <style>
+    /* Minimal styles for popups/flashes to match theme */
+    .flash { margin: 12px auto; padding:10px; width:80%; text-align:center; border-radius:8px; }
+    .flash.success { background:#111; border:2px solid #ff6666; color:white; box-shadow:0 0 12px red; }
+    .flash.error { background:#111; border:2px solid #660000; color:white; box-shadow:0 0 12px darkred; }
+    </style>
 </body>
 
 {% endblock %}

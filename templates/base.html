@@ -7,7 +7,7 @@
     <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
 </head>
 
-<body>
+<body id="site-body" class="fade-transition">
     {% if request.endpoint not in ['login', 'register'] %}
     <!-- Navbar for Logged-In Pages -->
     <header class="top-banner">
@@ -35,5 +35,63 @@
     <footer>
         <p>&copy; 2025 FightZone Gym — All rights reserved. | Founder: Cynrics</p>
     </footer>
+
+<script>
+(function(){
+    const body = document.getElementById("site-body");
+
+    // Only logged-in pages should fade
+    const isLoggedIn = {{ 'true' if session.get('user_id') else 'false' }};
+
+    // Allowed pages for transitions
+    const allowedRoutes = ["/home", "/about", "/benefits", "/membership", "/store"];
+
+    function isAllowed(url) {
+        try {
+            const u = new URL(url, window.location.href);
+            return allowedRoutes.includes(u.pathname);
+        } catch {
+            return false;
+        }
+    }
+
+    if (!isLoggedIn) {
+        console.log("Fade disabled (not logged in)");
+        return;
+    }
+
+    // Intercept link clicks
+    document.addEventListener("click", function(e){
+        if (e.defaultPrevented) return;
+        if (e.button !== 0) return;
+        if (e.metaKey || e.ctrlKey || e.shiftKey || e.altKey) return;
+
+        let a = e.target;
+        while (a && a.tagName !== "A") a = a.parentElement;
+        if (!a || !a.href) return;
+
+        if (!isAllowed(a.href)) return;
+
+        e.preventDefault();
+        body.classList.add("fade-out");
+
+        setTimeout(() => {
+            window.location.href = a.href;
+        }, 350);
+    });
+
+})();
+</script>
+
+<style>
+#site-body.fade-transition {
+  opacity: 1;
+  transition: opacity 350ms ease-in-out;
+}
+#site-body.fade-out {
+  opacity: 0 !important;
+}
+</style>
+
 </body>
 </html>
