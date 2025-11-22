@@ -222,7 +222,7 @@ def register():
 def verify_otp():
     """
     Page for entering OTP sent to email.
-    On success: create user in DB and clear pending_registration from session.
+    On success: create user in DB and show the success popup.
     """
     pending = session.get('pending_registration')
     if not pending:
@@ -234,21 +234,21 @@ def verify_otp():
         if not code:
             return render_template('verify_otp.html', error="Please enter the code sent to your email.")
 
-        # check expiry
+        # Check expiration
         try:
             expires_at = datetime.fromisoformat(pending['otp_expires_at'])
         except Exception:
             expires_at = datetime.utcnow() - timedelta(seconds=1)
 
         if datetime.utcnow() > expires_at:
-            # expired
             session.pop('pending_registration', None)
             return render_template('verify_otp.html', error="OTP expired. Please register again.")
 
+        # Incorrect
         if code != pending.get('otp'):
             return render_template('verify_otp.html', error="Incorrect code. Try again.")
 
-        # All good — create user
+        # Correct → Create user
         try:
             conn = get_db_connection()
             cursor = conn.cursor()
@@ -267,12 +267,13 @@ def verify_otp():
             except:
                 pass
 
-        # Clear pending and redirect to login with success
+        # Clear pending registration
         session.pop('pending_registration', None)
-        flash("✅ Account verified and created! You may now log in.", "success")
-        return redirect(url_for('login'))
 
-    # GET: show form and mask email a bit
+        # ⭐ SHOW POPUP — do NOT redirect
+        return render_template("verify_otp.html", account_created=True)
+
+    # GET (pre-fill masked email)
     masked_email = None
     if pending and 'email' in pending:
         em = pending['email']
@@ -284,7 +285,6 @@ def verify_otp():
         masked_email = masked_local + "@" + parts[1]
 
     return render_template('verify_otp.html', masked_email=masked_email)
-
 # Resend OTP route (in case user requests)
 @app.route('/resend_otp')
 def resend_otp():

@@ -3,8 +3,15 @@
 
 <div class="otp-wrapper" style="max-width:520px;margin:60px auto;text-align:center;">
     <div style="background:#0d0d0d;padding:22px;border-radius:12px;border:3px solid red;box-shadow:0 0 16px red;">
+
+        {% if not account_created %}
         <h2 style="color:#ff6666;margin-bottom:6px;">Verify your email</h2>
-        <p style="color:#fff;margin-bottom:18px;">We sent a 6-digit code to <strong style="color:#ffaaaa;">{{ masked_email or 'your email' }}</strong>. Enter it below to complete registration.</p>
+        <p style="color:#fff;margin-bottom:18px;">
+            We sent a 6-digit code to
+            <strong style="color:#ffaaaa;">{{ masked_email or 'your email' }}</strong>.
+            Enter it below to complete registration.
+        </p>
+        {% endif %}
 
         {% if error %}
             <div style="background:#111;padding:10px;border:2px solid #660000;color:white;border-radius:8px;margin-bottom:12px;">
@@ -12,9 +19,15 @@
             </div>
         {% endif %}
 
+        {% if not account_created %}
         <form method="POST" style="display:flex;flex-direction:column;gap:10px;">
-            <input type="text" name="otp_code" placeholder="Enter verification code" required pattern="[0-9]{6}" style="padding:10px;border-radius:8px;border:1px solid #660000;background:#111;color:#fff;">
-            <button type="submit" style="padding:10px;border-radius:8px;border:none;background:red;color:black;font-weight:bold;">VERIFY & CREATE ACCOUNT</button>
+            <input type="text" name="otp_code" placeholder="Enter verification code" required pattern="[0-9]{6}"
+                style="padding:10px;border-radius:8px;border:1px solid #660000;background:#111;color:#fff;">
+
+            <button type="submit"
+                style="padding:10px;border-radius:8px;border:none;background:red;color:black;font-weight:bold;">
+                VERIFY & CREATE ACCOUNT
+            </button>
         </form>
 
         <div style="margin-top:10px;">
@@ -24,7 +37,40 @@
         </div>
 
         <p style="color:#aaa;margin-top:12px;font-size:13px;">Code will expire in 10 minutes.</p>
+        {% endif %}
     </div>
 </div>
+
+<!-- =============================
+     ACCOUNT CREATED POPUP
+================================= -->
+{% if account_created %}
+<div id="createdPopup"
+     style="position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.85);
+            display:flex;justify-content:center;align-items:center;z-index:9999;">
+
+    <div style="background:#111;border:3px solid red;box-shadow:0 0 18px red;
+                padding:28px;border-radius:12px;width:360px;text-align:center;">
+
+        <h2 style="color:#ff4444;margin-bottom:10px;">Account Created!</h2>
+        <p style="color:white;margin-bottom:20px;">
+            Your FightZone account is now ready.
+        </p>
+
+        <button onclick="proceedLogin()"
+                style="width:100%;padding:12px;background:red;border:none;color:black;
+                       font-weight:bold;border-radius:8px;cursor:pointer;">
+            Proceed
+        </button>
+    </div>
+
+</div>
+
+<script>
+function proceedLogin() {
+    window.location.href = "{{ url_for('login') }}";
+}
+</script>
+{% endif %}
 
 {% endblock %}
