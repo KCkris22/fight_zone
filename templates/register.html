@@ -1,6 +1,56 @@
 {% extends "base.html" %}
 {% block content %}
 
+<!-- 🔥 YOUTUBE BACKGROUND -->
+<div class="yt-bg">
+    <iframe
+        src="https://www.youtube.com/embed/7hd429vNaR4?autoplay=1&mute=1&loop=1&playlist=7hd429vNaR4&controls=0&showinfo=0&modestbranding=1"
+        frameborder="0"
+        allow="autoplay"
+        allowfullscreen
+    ></iframe>
+</div>
+
+<div class="overlay"></div>
+
+<style>
+    .yt-bg {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100vw;
+        height: 100vh;
+        overflow: hidden;
+        z-index: -3;
+    }
+
+    .yt-bg iframe {
+        width: 150vw;
+        height: 150vh;
+        position: absolute;
+        top: -20vh;
+        left: -25vw;
+        pointer-events: none;
+        filter: brightness(60%);
+        animation: bgZoom 15s ease-in-out infinite alternate;
+    }
+
+    @keyframes bgZoom {
+        from { transform: scale(1); }
+        to { transform: scale(1.08); }
+    }
+
+    .overlay {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100vw;
+        height: 100vh;
+        background: rgba(0,0,0,0.65);
+        z-index: -2;
+    }
+</style>
+
 <body class="register-page">
 
     <!-- Centered Logo -->
@@ -35,6 +85,7 @@
             <input type="text" name="username" placeholder="Choose Username" required>
             <input type="email" name="email" placeholder="Enter Email" required>
             <input type="password" name="password" placeholder="Enter Password" required>
+
             <button type="submit">REQUEST VERIFICATION CODE</button>
         </form>
 
@@ -55,11 +106,11 @@
     </script>
 
     <style>
-    /* Minimal styles for popups/flashes to match theme */
-    .flash { margin: 12px auto; padding:10px; width:80%; text-align:center; border-radius:8px; }
-    .flash.success { background:#111; border:2px solid #ff6666; color:white; box-shadow:0 0 12px red; }
-    .flash.error { background:#111; border:2px solid #660000; color:white; box-shadow:0 0 12px darkred; }
+        .flash { margin: 12px auto; padding:10px; width:80%; text-align:center; border-radius:8px; }
+        .flash.success { background:#111; border:2px solid #ff6666; color:white; box-shadow:0 0 12px red; }
+        .flash.error { background:#111; border:2px solid #660000; color:white; box-shadow:0 0 12px darkred; }
     </style>
+
 </body>
 
 {% endblock %}

@@ -1,82 +1,167 @@
 {% extends "base.html" %}
 {% block content %}
-<div class="login-page">
-    <!-- Centered Logo -->
-    <div class="logo-container">
-        <div class="logo-box">
-            🥊 <span class="logo-text">FightZone</span> 🥊
-        </div>
-    </div>
 
-    <!-- Login Form -->
+<!-- YOUTUBE VIDEO BACKGROUND -->
+<div class="yt-bg">
+    <iframe
+        src="https://www.youtube.com/embed/7hd429vNaR4?autoplay=1&mute=1&loop=1&playlist=7hd429vNaR4&controls=0&showinfo=0&modestbranding=1"
+        frameborder="0"
+        allow="autoplay"
+        allowfullscreen
+    ></iframe>
+</div>
+
+<div class="overlay"></div>
+
+<style>
+/* Disable default header from base.html */
+.top-banner, .main-header {
+    display: none !important;
+}
+
+/* EXACT SAME HEADER FROM REGISTER PAGE */
+.register-header {
+    width: 100%;
+    height: 90px;
+    background: #0d0d0d;
+    border-top: 4px solid red;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    box-shadow: 0 0 20px red;
+    position: fixed;
+    top: 0;
+    left: 0;
+    z-index: 2000;
+}
+
+.register-header-logo {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 2.4rem;
+    color: white;
+    letter-spacing: 3px;
+    text-shadow: 0 0 12px red;
+    padding: 5px 25px;
+}
+
+/* Moves login content down below the header */
+.login-page {
+    padding-top: 130px;
+}
+
+/* Keep the cinematic background consistent */
+.yt-bg {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    overflow: hidden;
+    z-index: -3;
+}
+
+.yt-bg iframe {
+    width: 150vw;
+    height: 150vh;
+    position: absolute;
+    top: -20vh;
+    left: -25vw;
+    pointer-events: none;
+    filter: brightness(60%);
+    animation: bgZoom 15s ease-in-out infinite alternate;
+}
+
+@keyframes bgZoom {
+    from { transform: scale(1); }
+    to { transform: scale(1.08); }
+}
+
+.overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    background: rgba(0,0,0,0.65);
+    z-index: -2;
+}
+</style>
+
+<!-- TRUE REGISTER-PAGE HEADER (now in login page) -->
+<div class="register-header">
+    <div class="register-header-logo">🥊 FIGHTZONE 🥊</div>
+</div>
+
+<!-- LOGIN PAGE CONTENT -->
+<div class="login-page">
+
     <div class="form-container">
         <h2>Login</h2>
 
-        <!-- Error Messages -->
         {% if error %}
-        <div class="alert alert-error">
-            {{ error }}
-        </div>
+        <div class="alert alert-error">{{ error }}</div>
         {% endif %}
 
         <form method="POST" action="/login" id="loginForm">
             <input type="text" name="email" placeholder="Email" required>
             <input type="password" name="password" placeholder="Password" required>
 
-
-            <div id="captchaContainer" style="display: none; margin: 15px 0; padding: 15px; background: #f5f5f5; border-radius: 5px;">
-                <p style="margin: 0 0 10px 0; font-weight: bold;">Enter the code:</p>
-                <div style="display: flex; gap: 10px; align-items: center; margin-bottom: 10px;">
-                    <span id="captchaCode" style="background: #9e8d8d; border: 2px solid #333; padding: 10px 20px; font-size: 24px; font-weight: bold; letter-spacing: 5px; font-family: monospace; min-width: 150px; text-align: center;">XXXX</span>
-                    <button type="button" onclick="generateCaptcha()" style="padding: 8px 12px; background: #ddd; border: none; border-radius: 4px; cursor: pointer;">🔄</button>
+            <div id="captchaContainer" style="display:none; margin:15px 0; padding:15px; background:#f5f5f5; border-radius:5px;">
+                <p style="margin:0 0 10px 0; font-weight:bold;">Enter the code:</p>
+                <div style="display:flex; gap:10px; align-items:center; margin-bottom:10px;">
+                    <span id="captchaCode"
+                        style="background:#9e8d8d; border:2px solid #333; padding:10px 20px; font-size:24px; font-weight:bold; letter-spacing:5px; font-family:monospace; min-width:150px; text-align:center;">
+                        XXXX
+                    </span>
+                    <button type="button" onclick="generateCaptcha()" style="padding:8px 12px; background:#ddd; border:none; border-radius:4px; cursor:pointer;">🔄</button>
                 </div>
-                <input type="text" id="captchaInput" placeholder="Type code here" maxlength="6" style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px;">
+                <input type="text" id="captchaInput" placeholder="Type code here" maxlength="6"
+                       style="width:100%; padding:8px; border:1px solid #ddd; border-radius:4px;">
             </div>
 
             <button type="submit" id="loginBtn">Login</button>
         </form>
+
         <p>Don't have an account? <a href="{{ url_for('register') }}">Register</a></p>
     </div>
 </div>
 
 <script>
-    let captchaCode = '';
-    let captchaShown = false;
+let captchaCode = '';
+let captchaShown = false;
 
-    function generateCaptcha() {
-        const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
-        captchaCode = '';
-        for (let i = 0; i < 6; i++) {
-            captchaCode += chars.charAt(Math.floor(Math.random() * chars.length));
-        }
-        document.getElementById('captchaCode').textContent = captchaCode;
-        document.getElementById('captchaInput').value = '';
-        document.getElementById('captchaInput').focus();
+function generateCaptcha() {
+    const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
+    captchaCode = '';
+    for (let i = 0; i < 6; i++) {
+        captchaCode += chars.charAt(Math.floor(Math.random() * chars.length));
+    }
+    document.getElementById('captchaCode').textContent = captchaCode;
+    document.getElementById('captchaInput').value = '';
+    document.getElementById('captchaInput').focus();
+}
+
+document.getElementById('loginForm').addEventListener('submit', function(e) {
+    e.preventDefault();
+
+    if (!captchaShown) {
+        generateCaptcha();
+        document.getElementById('captchaContainer').style.display = 'block';
+        document.getElementById('loginBtn').textContent = 'Verify & Login';
+        captchaShown = true;
+        return;
     }
 
-    document.getElementById('loginForm').addEventListener('submit', function(e) {
-        e.preventDefault();
+    const userInput = document.getElementById('captchaInput').value.toUpperCase();
 
-        if (!captchaShown) {
-            // First click - show CAPTCHA
-            generateCaptcha();
-            document.getElementById('captchaContainer').style.display = 'block';
-            document.getElementById('loginBtn').textContent = 'Verify & Login';
-            captchaShown = true;
-            return;
-        }
+    if (userInput !== captchaCode) {
+        alert('Incorrect code. Try again.');
+        generateCaptcha();
+        return;
+    }
 
-        // Check CAPTCHA
-        const userInput = document.getElementById('captchaInput').value.toUpperCase();
-
-        if (userInput !== captchaCode) {
-            alert('Incorrect code. Try again.');
-            generateCaptcha();
-            return;
-        }
-
-        // CAPTCHA correct - submit form
-        this.submit();
-    });
+    this.submit();
+});
 </script>
+
 {% endblock %}

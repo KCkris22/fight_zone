@@ -153,7 +153,20 @@ def send_otp_email(recipient_email, otp_code):
 # ========== ROUTES ==========
 @app.route('/')
 def index():
-    return redirect(url_for('login'))
+    return redirect(url_for('landing_page'))
+
+# ---------------- Landing Page ----------------
+@app.route('/landing')
+def landing_page():
+    return render_template('landing.html')
+
+
+
+# ---------------- Landing Page ----------------
+@app.route('/landing')
+def landing():
+    return render_template('landing.html')
+
 
 # ---------------- Register ----------------
 @app.route('/register', methods=['GET', 'POST'])

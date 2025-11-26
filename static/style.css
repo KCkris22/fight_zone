@@ -148,6 +148,7 @@ body {
     letter-spacing: 1px;
 }
 
+
 /* Boxy input fields */
 input {
     display: block;
@@ -908,7 +909,6 @@ label {
     margin-top: 10px;
 }
 
-input[type="text"],
 input[type="file"] {
     width: 100%;
     background: black;
