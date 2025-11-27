@@ -2,71 +2,133 @@
 
 {% block content %}
 
-<!-- ✅ ADDED TOP NAVIGATION BAR (Nothing removed) -->
+<!-- ---------- TOP BAR FLOATING ABOVE PAGE ---------- -->
 <div class="admin-topbar">
     <div class="admin-top-buttons">
-    <a href="{{ url_for('admin_dashboard') }}" class="admin-btn">Manage Users</a>
-    <a href="{{ url_for('admin_subscriptions') }}" class="admin-btn">Transactions</a>
-</div>
+        <a href="{{ url_for('admin_dashboard') }}" class="admin-btn">Manage Users</a>
+        <a href="{{ url_for('admin_subscriptions') }}" class="admin-btn">Transactions</a>
+    </div>
 </div>
 
+<!-- ---------- MAIN PAGE CONTENT ---------- -->
+<div class="admin-section">
+    <h2>Registered Users Database</h2>
+
+    <!-- SEARCH + ADD -->
+    <div class="top-controls">
+        <input id="searchInput" class="search-bar" placeholder="Search...">
+        <button class="add-btn" onclick="openAddUser()">Add User</button>
+    </div>
+
+    <!-- TABLE -->
+    <div class="table-wrapper">
+        <table id="userTable">
+            <tr>
+                <th>ID</th>
+                <th>First Name</th>
+                <th>Last Name</th>
+                <th>Address</th>
+                <th>Email</th>
+                <th>Password</th>
+                <th>Actions</th>
+            </tr>
+
+            {% for user in users %}
+            <tr
+                data-id="{{ user.id }}"
+                data-firstname="{{ user.first_name }}"
+                data-lastname="{{ user.last_name }}"
+                data-address="{{ user.address }}"
+                data-email="{{ user.email }}"
+                data-password="{{ user.password }}"
+            >
+                <td>{{ user.id }}</td>
+                <td>{{ user.first_name }}</td>
+                <td>{{ user.last_name }}</td>
+                <td>{{ user.address }}</td>
+                <td>{{ user.email }}</td>
+                <td class="password-cell">{{ user.password }}</td>
+                <td>
+                    <button class="action-btn edit-btn" onclick="openEditUser({{ user.id }})">Edit</button>
+                    <button class="action-btn delete-btn" onclick="openDeleteConfirm({{ user.id }})">Delete</button>
+                </td>
+            </tr>
+            {% endfor %}
+        </table>
+    </div>
+</div>
+
+<!-- ---------- ADD USER MODAL ---------- -->
+<div id="addModal" class="modal-bg">
+    <div class="modal-box">
+        <h3>Add User</h3>
+        <input id="addFirst" class="modal-input" placeholder="First Name">
+        <input id="addLast" class="modal-input" placeholder="Last Name">
+        <input id="addAddress" class="modal-input" placeholder="Address">
+        <input id="addEmail" class="modal-input" placeholder="Email">
+        <input id="addPassword" class="modal-input" placeholder="Password">
+        <button class="modal-btn yes-btn" onclick="submitAdd()">Create</button>
+        <button class="modal-btn no-btn" onclick="closeAdd()">Cancel</button>
+    </div>
+</div>
+
+<!-- ---------- EDIT USER MODAL ---------- -->
+<div id="editModal" class="modal-bg">
+    <div class="modal-box">
+        <h3>Edit User</h3>
+        <input id="editFirst" class="modal-input" placeholder="First Name">
+        <input id="editLast" class="modal-input" placeholder="Last Name">
+        <input id="editAddress" class="modal-input" placeholder="Address">
+        <input id="editEmail" class="modal-input" placeholder="Email">
+        <button class="modal-btn yes-btn" id="editSave">Save</button>
+        <button class="modal-btn no-btn" onclick="closeEdit()">Cancel</button>
+    </div>
+</div>
+
+<!-- ---------- DELETE CONFIRM MODAL ---------- -->
+<div id="deleteModal" class="modal-bg">
+    <div class="modal-box">
+        <h3>Are you sure you want to delete this account?</h3>
+        <button class="modal-btn yes-btn" id="deleteYes">Yes</button>
+        <button class="modal-btn no-btn" onclick="closeDelete()">No</button>
+    </div>
+</div>
+
+<!-- ---------- CSS ---------- -->
 <style>
-/* ---------- ADDED NEW CSS FOR THE TOPBAR ---------- */
-
+/* TOP BAR FLOATING */
 .admin-topbar {
+    position: fixed;
+    top: 100px;
+    left: 50%;
+    transform: translateX(-50%);
     display: flex;
-    justify-content: space-between;
+    justify-content: flex-start;
     align-items: center;
-    padding: 15px 10px 5px 10px;
-    margin-bottom: 15px;
+    padding: 15px 20px;
+    background: rgba(0,0,0,0.9);
+    border: 2px solid red;
+    border-radius: 8px;
+    z-index: 999;
+    gap: 10px;
 }
 
-.admin-content {
-    display:flex;
-    flex-direction:column;
-    align-items:center;
-}
-
-
-.admin-btn {
+.admin-top-buttons .admin-btn {
     background: red;
     color: black;
     padding: 10px 16px;
     text-decoration: none;
     font-weight: bold;
     border-radius: 6px;
-    margin-right: 10px;
     transition: 0.2s ease;
 }
 
-.admin-btn:hover {
+.admin-top-buttons .admin-btn:hover {
     background: #ff4d4d;
     box-shadow: 0 0 10px red;
 }
 
-.logout-btn {
-    background: black;
-    color: red;
-    padding: 10px 16px;
-    text-decoration: none;
-    font-weight: bold;
-    border-radius: 6px;
-    transition: 0.2s ease;
-    border: 2px solid red;
-}
-
-.logout-btn:hover {
-    background: #222;
-    box-shadow: 0 0 10px red;
-}
-
-/* ---------- YOUR ORIGINAL CSS BELOW (UNCHANGED) ---------- */
-
-@keyframes fadeIn {
-    from {opacity: 0; transform: scale(0.95);}
-    to {opacity: 1; transform: scale(1);}
-}
-
+/* MAIN CONTAINER */
 .admin-section {
     width: 80%;
     max-width: 1100px;
@@ -74,11 +136,11 @@
     border: 2px solid red;
     border-radius: 12px;
     padding: 20px;
-    margin-top: 40px;
-    animation: fadeIn 0.4s ease-out;
+    margin: 100px auto 40px auto;
     box-shadow: 0 0 20px red;
 }
 
+/* HEADING */
 h2 {
     text-align: center;
     color: red;
@@ -86,6 +148,7 @@ h2 {
     margin-bottom: 20px;
 }
 
+/* TOP CONTROLS */
 .top-controls {
     display: flex;
     justify-content: space-between;
@@ -116,6 +179,7 @@ h2 {
     box-shadow: 0 0 12px red;
 }
 
+/* TABLE */
 .table-wrapper {
     width: 100%;
     max-height: 350px;
@@ -130,7 +194,6 @@ h2 {
 table {
     width: 100%;
     border-collapse: collapse;
-    margin-top: 10px;
 }
 
 th {
@@ -146,9 +209,7 @@ td {
     border-bottom: 1px solid #550000;
 }
 
-td, th {
-    white-space: nowrap;
-}
+td, th { white-space: nowrap; }
 
 .action-btn {
     padding: 6px 10px;
@@ -167,10 +228,8 @@ td, th {
 /* MODALS */
 .modal-bg {
     position: fixed;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
+    top: 0; left: 0;
+    width: 100%; height: 100%;
     background: rgba(0,0,0,0.85);
     display: none;
     justify-content: center;
@@ -184,9 +243,8 @@ td, th {
     box-shadow: 0 0 20px red;
     border-radius: 12px;
     padding: 20px;
-    animation: fadeIn 0.2s;
-    color: white;
     text-align: center;
+    color: white;
 }
 
 .modal-input {
@@ -213,82 +271,12 @@ td, th {
 
 .no-btn { background: #444; color: white; }
 .no-btn:hover { background: #666; }
-
 </style>
 
-<!-- ---------- ORIGINAL CONTENT BELOW (UNCHANGED) ---------- -->
-
-<div class="admin-section">
-
-    <h2>Registered Users Database</h2>
-
-    <div class="top-controls">
-        <input id="searchInput" class="search-bar" placeholder="Search...">
-        <button class="add-btn" onclick="openAddUser()">Add User</button>
-    </div>
-
-    <div class="table-wrapper">
-        <table id="userTable">
-            <tr>
-                <th>ID</th><th>Username</th><th>Email</th><th>Password</th><th>Actions</th>
-            </tr>
-
-            {% for user in users %}
-            <tr data-id="{{ user.id }}" data-username="{{ user.username }}" data-email="{{ user.email }}" data-password="{{ user.password }}">
-                <td>{{ user.id }}</td>
-                <td>{{ user.username }}</td>
-                <td>{{ user.email }}</td>
-                <td class="password-cell">{{ user.password }}</td>
-                <td>
-                    <button class="action-btn edit-btn" onclick="openEditUser({{ user.id }})">Edit</button>
-                    <button class="action-btn delete-btn" onclick="openDeleteConfirm({{ user.id }})">Delete</button>
-                </td>
-            </tr>
-            {% endfor %}
-        </table>
-    </div>
-
-    <!-- DELETE CONFIRM MODAL -->
-    <div id="deleteModal" class="modal-bg">
-        <div class="modal-box">
-            <h3>Are you sure you want to delete this account?</h3>
-            <button class="modal-btn yes-btn" id="deleteYes">Yes</button>
-            <button class="modal-btn no-btn" onclick="closeDelete()">No</button>
-        </div>
-    </div>
-
-    <!-- EDIT MODAL -->
-    <div id="editModal" class="modal-bg">
-        <div class="modal-box">
-            <h3>Edit User</h3>
-            <input id="editUsername" class="modal-input" placeholder="New Username">
-            <input id="editEmail" class="modal-input" placeholder="New Email">
-            <button class="modal-btn yes-btn" id="editSave">Save</button>
-            <button class="modal-btn no-btn" onclick="closeEdit()">Cancel</button>
-        </div>
-    </div>
-
-    <!-- ADD MODAL -->
-    <div id="addModal" class="modal-bg">
-        <div class="modal-box">
-            <h3>Add User</h3>
-            <input id="addUsername" class="modal-input" placeholder="Username">
-            <input id="addEmail" class="modal-input" placeholder="Email">
-            <input id="addPassword" class="modal-input" placeholder="Password">
-            <button class="modal-btn yes-btn" onclick="submitAdd()">Create</button>
-            <button class="modal-btn no-btn" onclick="closeAdd()">Cancel</button>
-        </div>
-    </div>
-
-</div>
-
+<!-- ---------- JAVASCRIPT ---------- -->
 <script>
-/* KEEPING YOUR ORIGINAL JS COMPLETELY UNCHANGED */
-
-let deleteUserId = null;
-let editUserId = null;
-
 /* DELETE */
+let deleteUserId = null;
 function openDeleteConfirm(id) {
     deleteUserId = id;
     document.getElementById("deleteModal").style.display = "flex";
@@ -296,54 +284,50 @@ function openDeleteConfirm(id) {
 function closeDelete() {
     document.getElementById("deleteModal").style.display = "none";
 }
-document.getElementById("deleteYes").onclick = function() {
+document.getElementById("deleteYes")?.addEventListener("click", function() {
     window.location.href = `/admin/delete_user/${deleteUserId}`;
-};
+});
 
 /* EDIT */
+let editUserId = null;
 function openEditUser(id) {
     editUserId = id;
     const row = document.querySelector(`tr[data-id='${id}']`);
-    document.getElementById("editUsername").value = row.dataset.username;
+    document.getElementById("editFirst").value = row.dataset.firstname;
+    document.getElementById("editLast").value = row.dataset.lastname;
+    document.getElementById("editAddress").value = row.dataset.address;
     document.getElementById("editEmail").value = row.dataset.email;
     document.getElementById("editModal").style.display = "flex";
 }
-function closeEdit() {
-    document.getElementById("editModal").style.display = "none";
-}
-document.getElementById("editSave").onclick = function () {
-    const newU = document.getElementById("editUsername").value;
-    const newE = document.getElementById("editEmail").value;
+function closeEdit() { document.getElementById("editModal").style.display = "none"; }
+document.getElementById("editSave")?.addEventListener("click", function () {
+    const f = document.getElementById("editFirst").value;
+    const l = document.getElementById("editLast").value;
+    const a = document.getElementById("editAddress").value;
+    const e = document.getElementById("editEmail").value;
+    window.location.href = `/admin/edit_user/${editUserId}?first_name=${f}&last_name=${l}&address=${a}&email=${e}`;
+});
 
-    window.location.href = `/admin/edit_user/${editUserId}?username=${newU}&email=${newE}`;
-};
-
-/* ADD USER */
-function openAddUser() {
-    document.getElementById("addModal").style.display = "flex";
-}
-function closeAdd() {
-    document.getElementById("addModal").style.display = "none";
-}
+/* ADD */
+function openAddUser() { document.getElementById("addModal").style.display = "flex"; }
+function closeAdd() { document.getElementById("addModal").style.display = "none"; }
 function submitAdd() {
-    const u = document.getElementById("addUsername").value;
+    const f = document.getElementById("addFirst").value;
+    const l = document.getElementById("addLast").value;
+    const a = document.getElementById("addAddress").value;
     const e = document.getElementById("addEmail").value;
     const p = document.getElementById("addPassword").value;
-
-    window.location.href = `/admin/add_user?username=${u}&email=${e}&password=${p}`;
+    window.location.href = `/admin/add_user?first_name=${f}&last_name=${l}&address=${a}&email=${e}&password=${p}`;
 }
 
 /* LIVE SEARCH */
-const search = document.getElementById("searchInput");
-search.addEventListener("keyup", () => {
-    const term = search.value.toLowerCase();
+document.getElementById("searchInput")?.addEventListener("keyup", () => {
+    const term = searchInput.value.toLowerCase();
     document.querySelectorAll("#userTable tr").forEach((row, i) => {
         if (i === 0) return;
-        row.style.display =
-            row.innerText.toLowerCase().includes(term) ? "" : "none";
+        row.style.display = row.innerText.toLowerCase().includes(term) ? "" : "none";
     });
 });
-
 </script>
 
 {% endblock %}

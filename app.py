@@ -22,7 +22,11 @@ DB_CONFIG = {
     "database": "fight_zone"
 }
 
-# Email (placeholder)
+# Admin configuration (Option A: Admin by email)
+ADMIN_EMAIL = "admin@fightzone.com"
+ADMIN_PASSWORD = "admin123"
+
+# Email (placeholder - used for OTP sending)
 EMAIL_SENDER = "magalloncynric@gmail.com"
 EMAIL_APP_PASSWORD = "lehb diih shza rmnx"
 EMAIL_SMTP = "smtp.gmail.com"
@@ -47,28 +51,36 @@ def get_db_connection():
 
 # ---------- Dev convenience: ensure admin exists ----------
 def ensure_admin():
+    """
+    Ensure the admin user (by ADMIN_EMAIL) exists. If not, create with default password.
+    Uses fields: first_name, last_name, address, email, password.
+    """
+    conn = None
+    cursor = None
     try:
         conn = get_db_connection()
         cursor = conn.cursor(dictionary=True)
-        cursor.execute("SELECT * FROM users WHERE username = %s", ("Administrator",))
+        cursor.execute("SELECT * FROM users WHERE email = %s", (ADMIN_EMAIL,))
         admin = cursor.fetchone()
 
         if not admin:
-            hashed = generate_password_hash("admin123")
+            hashed = generate_password_hash(ADMIN_PASSWORD)
             cursor.execute(
-                "INSERT INTO users (username, email, password) VALUES (%s, %s, %s)",
-                ("Administrator", "admin@fightzone.com", hashed)
+                "INSERT INTO users (first_name, last_name, address, email, password) VALUES (%s, %s, %s, %s, %s)",
+                ("Administrator", "", "", ADMIN_EMAIL, hashed)
             )
             conn.commit()
-            print("[setup] Administrator account created.")
+            print("[setup] Administrator account created (email=%s)." % ADMIN_EMAIL)
         else:
-            print("[setup] Administrator exists.")
+            print("[setup] Administrator exists (email=%s)." % ADMIN_EMAIL)
     except Error as e:
         print("[setup] DB error:", e)
     finally:
         try:
-            cursor.close()
-            conn.close()
+            if cursor:
+                cursor.close()
+            if conn:
+                conn.close()
         except:
             pass
 
@@ -119,9 +131,7 @@ def generate_otp(length=6):
 
 def send_otp_email(recipient_email, otp_code):
     """Send OTP to user's email using Gmail SMTP. Returns True if sent successfully."""
-
     subject = "FightZone — Your Verification Code"
-
     body = (
         f"Greetings Champ!,\n\n"
         f"Your FightZone verification code is:\n\n"
@@ -130,7 +140,6 @@ def send_otp_email(recipient_email, otp_code):
         f"— FightZone Security Team"
     )
 
-    # Build proper MIME email
     msg = MIMEMultipart()
     msg["From"] = EMAIL_SENDER
     msg["To"] = recipient_email
@@ -160,38 +169,32 @@ def index():
 def landing_page():
     return render_template('landing.html')
 
-
-
-# ---------------- Landing Page ----------------
-@app.route('/landing')
-def landing():
-    return render_template('landing.html')
-
-
 # ---------------- Register ----------------
 @app.route('/register', methods=['GET', 'POST'])
 def register():
     """
-    Mode A: OTP BEFORE account creation.
-    - On POST: validate inputs, uniqueness, generate OTP, send email, store pending data in session.
-    - Redirect user to /verify_otp to input code.
+    Registration flow updated for the new users table fields:
+    - first_name, last_name, address, email, password
+    OTP-first approach: POST stores pending in session and sends OTP; user verifies on /verify_otp.
     """
     popup_message = None
 
     if request.method == 'POST':
-        username = request.form.get('username', '').strip()
+        first_name = request.form.get('first_name', '').strip()
+        last_name = request.form.get('last_name', '').strip()
+        address = request.form.get('address', '').strip()
         email = request.form.get('email', '').strip()
         password = request.form.get('password', '')
 
-        if not username or not email or not password:
-            popup_message = "⚠️ Please fill all fields."
+        if not first_name or not last_name or not email or not password:
+            popup_message = "⚠️ Please fill all required fields (First, Last, Email, Password)."
             return render_template('register.html', popup_message=popup_message)
 
-        # Check uniqueness
+        # Check uniqueness by email
         try:
             conn = get_db_connection()
             cursor = conn.cursor(dictionary=True)
-            cursor.execute("SELECT * FROM users WHERE username = %s OR email = %s", (username, email))
+            cursor.execute("SELECT * FROM users WHERE email = %s", (email,))
             existing = cursor.fetchone()
         except Error as e:
             print("Register DB error (check existing):", e)
@@ -204,7 +207,7 @@ def register():
                 pass
 
         if existing:
-            popup_message = "⚠️ Username or Email already exists!"
+            popup_message = "⚠️ Email already exists! Try logging in instead."
             return render_template('register.html', popup_message=popup_message)
 
         # generate OTP and attempt to send email
@@ -218,7 +221,9 @@ def register():
         # store pending registration in session until OTP verified (expires in 10 minutes)
         expiry = (datetime.utcnow() + timedelta(minutes=10)).isoformat()
         session['pending_registration'] = {
-            "username": username,
+            "first_name": first_name,
+            "last_name": last_name,
+            "address": address,
             "email": email,
             "password_hash": generate_password_hash(password),
             "otp": otp,
@@ -261,14 +266,20 @@ def verify_otp():
         if code != pending.get('otp'):
             return render_template('verify_otp.html', error="Incorrect code. Try again.")
 
-        # Correct → Create user
+        # Correct → Create user (first_name, last_name, address, email, password)
         try:
             conn = get_db_connection()
             cursor = conn.cursor()
             cursor.execute("""
-                INSERT INTO users (username, email, password)
-                VALUES (%s, %s, %s)
-            """, (pending['username'], pending['email'], pending['password_hash']))
+                INSERT INTO users (first_name, last_name, address, email, password)
+                VALUES (%s, %s, %s, %s, %s)
+            """, (
+                pending.get('first_name'),
+                pending.get('last_name'),
+                pending.get('address'),
+                pending.get('email'),
+                pending.get('password_hash')
+            ))
             conn.commit()
         except Error as e:
             print("verify_otp DB insert error:", e)
@@ -283,7 +294,7 @@ def verify_otp():
         # Clear pending registration
         session.pop('pending_registration', None)
 
-        # ⭐ SHOW POPUP — do NOT redirect
+        # Show popup confirming account created
         return render_template("verify_otp.html", account_created=True)
 
     # GET (pre-fill masked email)
@@ -298,6 +309,7 @@ def verify_otp():
         masked_email = masked_local + "@" + parts[1]
 
     return render_template('verify_otp.html', masked_email=masked_email)
+
 # Resend OTP route (in case user requests)
 @app.route('/resend_otp')
 def resend_otp():
@@ -366,10 +378,16 @@ def login():
             popup_message = "❌ Incorrect password."
             return render_template('login.html', popup_message=popup_message)
 
+        # set session values (use full name for username compatibility)
         session['user_id'] = user['id']
-        session['username'] = user['username']
+        full_name = (user.get('first_name') or '') + ((' ' + user.get('last_name')) if user.get('last_name') else '')
+        session['username'] = full_name.strip() or user.get('email')
+        session['email'] = user.get('email')
+        session['first_name'] = user.get('first_name')
+        session['last_name'] = user.get('last_name')
 
-        if user['username'].lower() == 'administrator':
+        # admin check by email (Option A)
+        if user.get('email') and user.get('email').lower() == ADMIN_EMAIL.lower():
             return redirect(url_for('admin_dashboard'))
 
         return redirect(url_for('home'))
@@ -445,7 +463,8 @@ def store():
 # ---------------- ADMIN DASHBOARD ----------------
 @app.route('/admin_dashboard')
 def admin_dashboard():
-    if 'user_id' not in session or session.get('username', '').lower() != 'administrator':
+    # admin check via email
+    if 'user_id' not in session or session.get('email', '').lower() != ADMIN_EMAIL.lower():
         return redirect(url_for('login'))
 
     users = []
@@ -453,7 +472,8 @@ def admin_dashboard():
         conn = get_db_connection()
         cursor = conn.cursor(dictionary=True)
 
-        cursor.execute("SELECT id, username, email, password FROM users")
+        # select user info using first/last names
+        cursor.execute("SELECT id, first_name, last_name, address, email, password FROM users")
         users = cursor.fetchall()
 
     except Error as e:
@@ -465,22 +485,40 @@ def admin_dashboard():
         except:
             pass
 
+    # add a 'display_name' to each user for templates
+    for u in users:
+        fn = u.get('first_name') or ''
+        ln = u.get('last_name') or ''
+        u['display_name'] = (fn + (' ' + ln if ln else '')).strip() or u.get('email')
+
     return render_template('admin_dashboard.html', users=users)
 
 # ---------------- DELETE USER (Modal Confirm) ----------------
 @app.route('/admin/delete_user/<int:id>')
 def delete_user(id):
-
-    # Prevent deleting the admin
-    if id == session.get('user_id'):
-        return redirect('/admin_dashboard')
+    # Prevent deleting the admin (by email)
+    try:
+        conn = get_db_connection()
+        cursor = conn.cursor(dictionary=True)
+        cursor.execute("SELECT email FROM users WHERE id = %s", (id,))
+        row = cursor.fetchone()
+        if row and row.get('email') and row.get('email').lower() == ADMIN_EMAIL.lower():
+            flash(" ", "error")
+            return redirect('/admin_dashboard')
+    except Exception as e:
+        print("delete_user lookup error:", e)
+        # fall through to safe behavior
+    finally:
+        try:
+            cursor.close()
+            conn.close()
+        except:
+            pass
 
     conn = get_db_connection()
     cursor = conn.cursor()
-
     cursor.execute("DELETE FROM users WHERE id = %s", (id,))
     conn.commit()
-
     cursor.close()
     conn.close()
 
@@ -489,17 +527,18 @@ def delete_user(id):
 # ---------------- EDIT USER ----------------
 @app.route('/admin/edit_user/<int:id>')
 def edit_user(id):
-    new_username = request.args.get("username")
+    new_first = request.args.get("first_name")
+    new_last = request.args.get("last_name")
     new_email = request.args.get("email")
+    new_address = request.args.get("address", "")
 
     conn = get_db_connection()
     cursor = conn.cursor()
-
     cursor.execute("""
         UPDATE users
-        SET username = %s, email = %s
+        SET first_name = %s, last_name = %s, email = %s, address = %s
         WHERE id = %s
-    """, (new_username, new_email, id))
+    """, (new_first, new_last, new_email, new_address, id))
 
     conn.commit()
     cursor.close()
@@ -510,20 +549,24 @@ def edit_user(id):
 # ---------------- ADD USER ----------------
 @app.route('/admin/add_user')
 def add_user():
-    username = request.args.get("username")
+    # Creates a new user (admin interface)
+    first_name = request.args.get("first_name", "New")
+    last_name = request.args.get("last_name", "User")
     email = request.args.get("email")
-    password = request.args.get("password")
+    password = request.args.get("password", "changeme")
+
+    if not email:
+        flash("Email required to add user.", "error")
+        return redirect(url_for('admin_dashboard'))
 
     hashed_pw = generate_password_hash(password)
 
     conn = get_db_connection()
     cursor = conn.cursor()
-
     cursor.execute("""
-        INSERT INTO users (username, email, password)
-        VALUES (%s, %s, %s)
-    """, (username, email, hashed_pw))
-
+        INSERT INTO users (first_name, last_name, address, email, password)
+        VALUES (%s, %s, %s, %s, %s)
+    """, (first_name, last_name, "", email, hashed_pw))
     conn.commit()
     cursor.close()
     conn.close()
@@ -775,7 +818,7 @@ def store_pay():
 @app.route("/admin/subscriptions")
 def admin_subscriptions():
     # admin check
-    if 'user_id' not in session or session.get('username', '').lower() != 'administrator':
+    if 'user_id' not in session or session.get('email', '').lower() != ADMIN_EMAIL.lower():
         return redirect(url_for('login'))
 
     combined = []
@@ -788,7 +831,7 @@ def admin_subscriptions():
             SELECT
                 s.id,
                 s.user_id,
-                u.username AS requester_username,
+                CONCAT(IFNULL(u.first_name,''), ' ', IFNULL(u.last_name,'')) AS requester_username,
                 u.email AS requester_email,
                 s.payment_method,
                 s.plan AS item,
@@ -807,7 +850,7 @@ def admin_subscriptions():
             SELECT
                 o.id,
                 o.user_id,
-                u.username AS requester_username,
+                CONCAT(IFNULL(u.first_name,''), ' ', IFNULL(u.last_name,'')) AS requester_username,
                 u.email AS requester_email,
                 o.payment_method,
                 o.product_name AS item,
@@ -838,7 +881,7 @@ def admin_subscriptions():
 # ----------------- ADMIN: ACCEPT / REJECT (unified for membership+store) -----------------
 @app.route('/admin/transactions/accept/<string:typ>/<int:id>')
 def admin_accept(typ, id):
-    if 'user_id' not in session or session.get('username', '').lower() != 'administrator':
+    if 'user_id' not in session or session.get('email', '').lower() != ADMIN_EMAIL.lower():
         return redirect(url_for('login'))
 
     message = "✅ Your payment has been accepted!"
@@ -854,7 +897,7 @@ def admin_accept(typ, id):
 
 @app.route('/admin/transactions/reject/<string:typ>/<int:id>')
 def admin_reject(typ, id):
-    if 'user_id' not in session or session.get('username', '').lower() != 'administrator':
+    if 'user_id' not in session or session.get('email', '').lower() != ADMIN_EMAIL.lower():
         return redirect(url_for('login'))
 
     message = "❌ Your payment was rejected. Please resubmit a valid proof."
@@ -870,7 +913,7 @@ def admin_reject(typ, id):
 
 @app.route('/admin/transactions/delete/<string:typ>/<int:id>')
 def admin_delete(typ, id):
-    if 'user_id' not in session or session.get('username', '').lower() != 'administrator':
+    if 'user_id' not in session or session.get('email', '').lower() != ADMIN_EMAIL.lower():
         return redirect(url_for('login'))
 
     try:
@@ -915,7 +958,7 @@ def admin_delete(typ, id):
 # ----------------- ADMIN: EDIT SUBSCRIPTION (POST) -----------------
 @app.route('/admin/subscriptions/edit', methods=['POST'])
 def edit_subscription_post():
-    if 'user_id' not in session or session.get('username', '').lower() != 'administrator':
+    if 'user_id' not in session or session.get('email', '').lower() != ADMIN_EMAIL.lower():
         return redirect(url_for('login'))
 
     sub_id = request.form.get('id')
@@ -945,7 +988,7 @@ def edit_subscription_post():
 # ----------------- ADMIN: TRANSACTIONS PAGE (keeps nav link working) -----------------
 @app.route('/admin/transactions')
 def admin_transactions():
-    if 'user_id' not in session or session.get('username', '').lower() != 'administrator':
+    if 'user_id' not in session or session.get('email', '').lower() != ADMIN_EMAIL.lower():
         return redirect(url_for('login'))
 
     transactions = []
@@ -959,7 +1002,7 @@ def admin_transactions():
                 SELECT
                     s.id,
                     s.user_id,
-                    u.username,
+                    CONCAT(IFNULL(u.first_name,''), ' ', IFNULL(u.last_name,'')) AS username,
                     s.payment_method,
                     s.plan AS item,
                     s.price,
@@ -973,7 +1016,7 @@ def admin_transactions():
                 SELECT
                     o.id,
                     o.user_id,
-                    u.username,
+                    CONCAT(IFNULL(u.first_name,''), ' ', IFNULL(u.last_name,'')) AS username,
                     o.payment_method,
                     o.product_name AS item,
                     o.price,

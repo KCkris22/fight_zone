@@ -19,7 +19,13 @@
     display: none !important;
 }
 
-/* EXACT SAME HEADER FROM REGISTER PAGE */
+/* Prevent scrolling */
+html, body {
+    height: 100%;
+    overflow: hidden !important;
+}
+
+/* FightZone Header */
 .register-header {
     width: 100%;
     height: 90px;
@@ -44,12 +50,17 @@
     padding: 5px 25px;
 }
 
-/* Moves login content down below the header */
+/* Center Page Content */
 .login-page {
-    padding-top: 130px;
+    height: calc(100vh - 90px);
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    margin-top: 30px;
 }
 
-/* Keep the cinematic background consistent */
+/* Background styling */
 .yt-bg {
     position: fixed;
     top: 0;
@@ -85,14 +96,69 @@
     background: rgba(0,0,0,0.65);
     z-index: -2;
 }
+
+/* RETURN BUTTON */
+.return-btn {
+    margin: -40px auto 0 auto;
+    display: block;
+    width: 150px;
+    padding: 12px;
+    background: red;
+    color: black;
+    text-align: center;
+    font-weight: bold;
+    font-size: 18px;
+    border-radius: 10px;
+    border: 2px solid #ff0000;
+    cursor: pointer;
+    text-decoration: none;
+    box-shadow: 0 0 18px rgba(255,0,0,0.6);
+    transition: 0.3s ease;
+}
+
+.return-btn:hover {
+    transform: scale(1.07);
+    background: #ff3b3b;
+    box-shadow: 0 0 25px red;
+}
+
+/* 🔥 RETURN CLICK DYNAMIC FLASH EFFECT */
+.return-flash {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    background: radial-gradient(circle, rgba(255,0,0,0.9) 0%, rgba(0,0,0,1) 80%);
+    opacity: 0;
+    transform: scale(0.6);
+    z-index: 5000;
+    pointer-events: none;
+    animation: flashEffect 0.5s forwards ease-out;
+}
+
+@keyframes flashEffect {
+    0% {
+        opacity: 0;
+        transform: scale(0.6);
+    }
+    50% {
+        opacity: 1;
+        transform: scale(1.1);
+    }
+    100% {
+        opacity: 0;
+        transform: scale(1.4);
+    }
+}
 </style>
 
-<!-- TRUE REGISTER-PAGE HEADER (now in login page) -->
+<!-- FightZone Header -->
 <div class="register-header">
     <div class="register-header-logo">🥊 FIGHTZONE 🥊</div>
 </div>
 
-<!-- LOGIN PAGE CONTENT -->
+<!-- LOGIN CONTENT -->
 <div class="login-page">
 
     <div class="form-container">
@@ -124,6 +190,9 @@
 
         <p>Don't have an account? <a href="{{ url_for('register') }}">Register</a></p>
     </div>
+
+    <!-- RETURN BUTTON -->
+    <a href="{{ url_for('landing_page') }}" class="return-btn">⬅ RETURN</a>
 </div>
 
 <script>
@@ -159,8 +228,20 @@ document.getElementById('loginForm').addEventListener('submit', function(e) {
         generateCaptcha();
         return;
     }
-
     this.submit();
+});
+
+/* 🔥 RETURN BUTTON — Cinematic Flash Transition */
+document.querySelector(".return-btn").addEventListener("click", function(e) {
+    e.preventDefault();
+
+    const flash = document.createElement("div");
+    flash.classList.add("return-flash");
+    document.body.appendChild(flash);
+
+    setTimeout(() => {
+        window.location.href = "{{ url_for('landing_page') }}";
+    }, 450);
 });
 </script>
 

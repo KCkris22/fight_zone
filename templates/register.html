@@ -14,41 +14,46 @@
 <div class="overlay"></div>
 
 <style>
-    .yt-bg {
-        position: fixed;
-        top: 0;
-        left: 0;
-        width: 100vw;
-        height: 100vh;
-        overflow: hidden;
-        z-index: -3;
-    }
+html, body {
+    height: 100%;
+    overflow: hidden !important;
+}
 
-    .yt-bg iframe {
-        width: 150vw;
-        height: 150vh;
-        position: absolute;
-        top: -20vh;
-        left: -25vw;
-        pointer-events: none;
-        filter: brightness(60%);
-        animation: bgZoom 15s ease-in-out infinite alternate;
-    }
+.yt-bg {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    overflow: hidden;
+    z-index: -3;
+}
 
-    @keyframes bgZoom {
-        from { transform: scale(1); }
-        to { transform: scale(1.08); }
-    }
+.yt-bg iframe {
+    width: 150vw;
+    height: 150vh;
+    position: absolute;
+    top: -20vh;
+    left: -25vw;
+    pointer-events: none;
+    filter: brightness(60%);
+    animation: bgZoom 15s ease-in-out infinite alternate;
+}
 
-    .overlay {
-        position: fixed;
-        top: 0;
-        left: 0;
-        width: 100vw;
-        height: 100vh;
-        background: rgba(0,0,0,0.65);
-        z-index: -2;
-    }
+@keyframes bgZoom {
+    from { transform: scale(1); }
+    to { transform: scale(1.08); }
+}
+
+.overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    background: rgba(0,0,0,0.65);
+    z-index: -2;
+}
 </style>
 
 <body class="register-page">
@@ -81,8 +86,17 @@
         </div>
         {% endif %}
 
+        <!-- ✔ CORRECTED FORM to match new DB -->
         <form method="POST" novalidate>
-            <input type="text" name="username" placeholder="Choose Username" required>
+
+            <!-- ✔ first_name / last_name -->
+            <input type="text" name="first_name" placeholder="First Name" required>
+            <input type="text" name="last_name" placeholder="Last Name" required>
+
+            <!-- ✔ address -->
+            <input type="text" name="address" placeholder="Enter Address" required>
+
+            <!-- ✔ email / password -->
             <input type="email" name="email" placeholder="Enter Email" required>
             <input type="password" name="password" placeholder="Enter Password" required>
 
