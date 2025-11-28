@@ -1,33 +1,265 @@
 {% extends "base.html" %}
 {% block content %}
+
+<style>
+    /* --- FLOATING CARDS --- */
+    .benefits-section {
+        text-align: center;
+        padding: 40px 20px;
+    }
+
+    .benefits-title {
+        font-size: 42px;
+        font-weight: 700;
+        color: #FFFAE4;
+        margin-bottom: 20px;
+    }
+
+    .benefits-container {
+        display: flex;
+        flex-wrap: wrap;
+        justify-content: center;
+        gap: 25px;
+        margin-bottom: 60px;
+    }
+
+    .benefits-container .benefit-card {
+        background: #111;
+        padding: 25px;
+        width: 260px;
+        min-width: 20px;
+        border-radius: 15px;
+        color: #eee;
+        border: 2px solid #ff2c2c33;
+        box-shadow: 0 0 20px rgba(255, 0, 0, 0.2);
+        transition: 0.3s, box-shadow 0.3s, transform 0.3s;
+        font-family: inherit;
+        cursor: pointer;
+    }
+
+    /* Hover neon red effect */
+    .benefits-container .benefit-card:hover {
+        transform: translateY(-5px) scale(1.05);
+        box-shadow:
+            0 0 10px #ff2c2c,
+            0 0 20px #ff2c2c,
+            0 0 30px #ff2c2c55,
+            inset 0 0 5px #ff2c2c33;
+        border-color: #ff2c2c;
+    }
+
+    .benefits-container .benefit-card:active {
+        transform: translateY(-2px) scale(0.98);
+        box-shadow:
+            0 0 15px #ff2c2c,
+            0 0 25px #ff2c2c,
+            0 0 35px #ff2c2c66,
+            inset 0 0 8px #ff2c2c44;
+    }
+
+    .benefits-container .benefit-card h2 {
+        color: #FFFAE4;
+        font-size: 15px;
+        margin-bottom: 12px;
+    }
+
+    .benefits-container .benefit-card p {
+        color: #eee;
+        font-size: 16px;
+        text-align: justify;
+        word-wrap: break-word;
+        overflow-wrap: break-word;
+    }
+
+    /* --- FULL BENEFIT SECTIONS --- */
+    .benefits-full-section {
+        background: #1a1a1a;
+        padding: 70px 0;
+        border-top: 2px solid #ff2c2c55;
+        border-bottom: 2px solid #ff2c2c55;
+    }
+
+    .benefits-full-section .benefit-block {
+        display: flex;
+        flex-direction: row;
+        align-items: center;
+        gap: 40px;
+        width: 90%;
+        max-width: 1400px;
+        margin: 700px auto;
+        padding: 50px; /* bigger box */
+        background: #111;
+        border-radius: 20px;
+        border: 2px solid #ff2c2c33;
+        box-shadow: 0 0 35px rgba(255, 0, 0, 0.25);
+        flex-wrap: wrap;
+        animation: fadeIn 0.8s ease-out;
+    }
+
+    .benefits-full-section .benefit-block-text {
+        flex: 1;
+        min-width: 300px;
+    }
+
+    .benefits-full-section .benefit-block-text h2 {
+        color: #ff2c2c;
+        font-size: 38px; /* slightly bigger */
+        margin-bottom: 25px;
+        text-align: center;
+    }
+
+    .benefits-full-section .benefit-block-text p {
+        color: #ddd;
+        font-size: 18px; /* slightly bigger */
+        font-weight: bold;
+        text-align: justify;
+        line-height: 1.8;
+    }
+
+    .benefits-full-section .benefit-block-img {
+        flex: 1;
+        display: flex;
+        justify-content: center;
+        min-width: 300px;
+    }
+
+    .benefits-full-section .benefit-block-img img {
+        width: 100%;
+        max-width: 500px; /* bigger image */
+        border-radius: 20px;
+        border: 2px solid #ff2c2c66;
+        box-shadow: 0 0 25px rgba(255, 0, 0, 0.35);
+    }
+
+    @media (max-width: 900px) {
+        .benefits-full-section .benefit-block {
+            flex-direction: column;
+            text-align: center;
+        }
+    }
+
+    @keyframes fadeIn {
+        from { opacity: 0; transform: translateY(20px); }
+        to { opacity: 1; transform: translateY(0); }
+    }
+</style>
+
+<!-- FLOATING BENEFIT CARDS -->
 <section class="benefits-section">
     <h1 class="benefits-title">🥊FightZone Benefits🥊</h1>
-
     <div class="benefits-container">
-        <div class="benefit-card">
+        <div class="benefit-card" onclick="scrollToBenefit('benefit-strength')">
             <h2>Build Raw Strength</h2>
             <p>Every jab, hook, and push-up sculpts your power. Train like a fighter, build strength that matters — inside and out.</p>
         </div>
 
-        <div class="benefit-card">
+        <div class="benefit-card" onclick="scrollToBenefit('benefit-burnfat')">
             <h2>Burn Fat Fast</h2>
             <p>High-intensity rounds keep your heart racing and calories burning long after the final bell.</p>
         </div>
 
-        <div class="benefit-card">
+        <div class="benefit-card" onclick="scrollToBenefit('benefit-focus')">
             <h2>Sharpen Focus & Discipline</h2>
             <p>Boxing builds mental grit. You’ll walk out sharper, stronger, and ready to face life’s toughest fights.</p>
         </div>
 
-        <div class="benefit-card">
+        <div class="benefit-card" onclick="scrollToBenefit('benefit-endurance')">
             <h2>Push Your Endurance</h2>
             <p>Boost your stamina and cardio through circuit sessions designed to push your limits — round after round.</p>
         </div>
 
-        <div class="benefit-card">
+        <div class="benefit-card" onclick="scrollToBenefit('benefit-brotherhood')">
             <h2>Join the Brotherhood</h2>
             <p>Train with people who lift you up. We fight together, win together, and grow stronger together.</p>
         </div>
     </div>
 </section>
+
+<!-- FULL BENEFIT SECTIONS -->
+<section class="benefits-full-section">
+
+    <!-- 1. BUILD RAW STRENGTH -->
+    <div class="benefit-block" id="benefit-strength">
+        <div class="benefit-block-text">
+            <h2>Build Raw Strength</h2>
+            <p>
+                Boxing develops explosive full-body strength, training shoulders, back, chest, core, and legs simultaneously. Unlike traditional weightlifting, FightZone focuses on <b>functional strength</b> that enhances speed, balance, coordination, and reaction time.<br><br>
+                With heavy bag rounds, focus mitts, and resistance conditioning, participants build lean, athletic power while improving posture, grip, and overall movement efficiency. Regular boxing training translates to practical strength usable in everyday life and sports.
+            </p>
+        </div>
+        <div class="benefit-block-img">
+            <img src="/static/images/benefit-strength.jpg" alt="Build Raw Strength">
+        </div>
+    </div>
+
+    <!-- 2. BURN FAT FAST -->
+    <div class="benefit-block" id="benefit-burnfat">
+        <div class="benefit-block-text">
+            <h2>Burn Fat Fast</h2>
+            <p>
+                Boxing is a highly effective fat-burning workout. Intense rounds elevate heart rate, boost metabolism, and continue burning calories long after the session. FightZone programs can burn 600–1000+ calories per session depending on intensity.<br><br>
+                Beyond weight loss, the training builds lean muscle, strengthens the cardiovascular system, and improves endurance. Dynamic combinations, footwork drills, and circuit training make the sessions challenging yet fun.
+            </p>
+        </div>
+        <div class="benefit-block-img">
+            <img src="/static/images/benefit-burnfat.jpg" alt="Burn Fat Fast">
+        </div>
+    </div>
+
+    <!-- 3. SHARPEN FOCUS -->
+    <div class="benefit-block" id="benefit-focus">
+        <div class="benefit-block-text">
+            <h2>Sharpen Focus & Discipline</h2>
+            <p>
+                Boxing requires mental clarity, timing, and precision. Each combination, slip, and defensive move trains concentration and self-discipline.<br><br>
+                FightZone emphasizes mental toughness, focus, and strategy, cultivating decision-making under pressure. Students develop confidence, composure, and resilience applicable both inside and outside the gym.
+            </p>
+        </div>
+        <div class="benefit-block-img">
+            <img src="/static/images/benefit-focus.jpg" alt="Sharpen Focus & Discipline">
+        </div>
+    </div>
+
+    <!-- 4. PUSH ENDURANCE -->
+    <div class="benefit-block" id="benefit-endurance">
+        <div class="benefit-block-text">
+            <h2>Push Your Endurance</h2>
+            <p>
+                Boxing rounds enhance cardiovascular endurance, muscular stamina, and overall conditioning. FightZone circuits are designed to push limits safely, increasing lung capacity, heart health, and muscular resilience.<br><br>
+                Participants learn pacing, recovery, and energy management. The result is a fitter, more capable body, able to sustain physical activity longer and resist fatigue during high-intensity training or daily challenges.
+            </p>
+        </div>
+        <div class="benefit-block-img">
+            <img src="/static/images/benefit-endurance.jpg" alt="Push Your Endurance">
+        </div>
+    </div>
+
+    <!-- 5. JOIN THE BROTHERHOOD -->
+    <div class="benefit-block" id="benefit-brotherhood">
+        <div class="benefit-block-text">
+            <h2>Join the Brotherhood</h2>
+            <p>
+                FightZone is more than a gym — it’s a supportive community. Members train, sweat, and grow together, fostering camaraderie and motivation. <br><br>
+                The environment encourages accountability, teamwork, and mutual respect. Lifelong friendships form as individuals push each other to achieve fitness goals, creating a powerful sense of belonging and shared success.
+            </p>
+        </div>
+        <div class="benefit-block-img">
+            <img src="/static/images/benefit-brotherhood.jpg" alt="Join the Brotherhood">
+        </div>
+    </div>
+
+</section>
+
+<script>
+    function scrollToBenefit(id) {
+        const element = document.getElementById(id);
+        if(element) {
+            element.scrollIntoView({ behavior: 'smooth', block: 'start' });
+            element.style.transition = 'transform 0.2s';
+            element.style.transform = 'scale(1.02)';
+            setTimeout(() => { element.style.transform = 'scale(1)'; }, 200);
+        }
+    }
+</script>
+
 {% endblock %}

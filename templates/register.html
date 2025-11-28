@@ -54,6 +54,27 @@ html, body {
     background: rgba(0,0,0,0.65);
     z-index: -2;
 }
+
+/* 🔥 FLASH EFFECT for Login button */
+.flash-transition {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    background: radial-gradient(circle, rgba(255,0,0,0.9) 0%, rgba(0,0,0,1) 80%);
+    opacity: 0;
+    transform: scale(0.6);
+    z-index: 5000;
+    pointer-events: none;
+    animation: flashEffect 0.5s forwards ease-out;
+}
+
+@keyframes flashEffect {
+    0% { opacity: 0; transform: scale(0.6); }
+    50% { opacity: 1; transform: scale(1.1); }
+    100% { opacity: 0; transform: scale(1.4); }
+}
 </style>
 
 <body class="register-page">
@@ -103,7 +124,9 @@ html, body {
             <button type="submit">REQUEST VERIFICATION CODE</button>
         </form>
 
-        <p>Already have an account? <a href="{{ url_for('login') }}">Login here</a></p>
+        <p>Already have an account?
+            <a href="{{ url_for('login') }}" id="loginLink">Login here</a>
+        </p>
     </div>
 
     <footer>© 2025 FightZone. All Rights Reserved.</footer>
@@ -116,6 +139,21 @@ html, body {
             popup.style.display = "flex";
             closeBtn.addEventListener("click", () => popup.style.display = "none");
         }
+    });
+
+    /* 🔥 FLASH TRANSITION HANDLER */
+    function triggerFlashAndGo(url) {
+        const flash = document.createElement("div");
+        flash.classList.add("flash-transition");
+        document.body.appendChild(flash);
+
+        setTimeout(() => { window.location.href = url; }, 450);
+    }
+
+    /* APPLY EFFECT TO LOGIN BUTTON */
+    document.getElementById("loginLink").addEventListener("click", function(e) {
+        e.preventDefault();
+        triggerFlashAndGo("{{ url_for('login') }}");
     });
     </script>
 

@@ -677,7 +677,7 @@ footer {
     border: 2px solid #ff0000;
     border-radius: 15px;
     padding: 25px;
-    width: 320px; /* ⬅ widened for title fit */
+    width: 320px;
     box-shadow: 0 0 25px rgba(255, 0, 0, 0.4);
     transition: 0.3s ease;
     text-align: center;
@@ -692,15 +692,15 @@ footer {
 /* Title inside each benefit card (FINAL FIX) */
 .benefit-card h2 {
     font-family: 'Bebas Neue', sans-serif;
-    font-size: 1.1rem; /* ✅ slightly smaller to fit all text */
+    font-size: 1.1rem;
     color: #fff;
     letter-spacing: 1px;
     text-transform: uppercase;
     margin-bottom: 15px;
     border-bottom: 2px solid #ff0000;
     padding-bottom: 8px;
-    white-space: nowrap; /* keep in one line */
-    overflow: visible; /* ensure full visibility */
+    white-space: nowrap;
+    overflow: visible;
     text-align: center;
 }
 

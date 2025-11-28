@@ -122,8 +122,8 @@ html, body {
     box-shadow: 0 0 25px red;
 }
 
-/* 🔥 RETURN CLICK DYNAMIC FLASH EFFECT */
-.return-flash {
+/* 🔥 UNIVERSAL FLASH TRANSITION EFFECT */
+.flash-transition {
     position: fixed;
     top: 0;
     left: 0;
@@ -138,18 +138,75 @@ html, body {
 }
 
 @keyframes flashEffect {
-    0% {
-        opacity: 0;
-        transform: scale(0.6);
-    }
-    50% {
-        opacity: 1;
-        transform: scale(1.1);
-    }
-    100% {
-        opacity: 0;
-        transform: scale(1.4);
-    }
+    0% { opacity: 0; transform: scale(0.6); }
+    50% { opacity: 1; transform: scale(1.1); }
+    100% { opacity: 0; transform: scale(1.4); }
+}
+
+/* ============================= */
+/*      ❌ CAPTCHA POPUP STYLE    */
+/* ============================= */
+.popup-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    background: rgba(0,0,0,0.85);
+    display: none;
+    justify-content: center;
+    align-items: center;
+    z-index: 7000;
+}
+
+.popup-box {
+    background: #0d0d0d;
+    border: 3px solid red;
+    box-shadow: 0 0 25px red;
+    padding: 25px 35px;
+    text-align: center;
+    width: 330px;
+    border-radius: 12px;
+    animation: popIn 0.25s ease-out;
+}
+
+.popup-box h3 {
+    font-family: 'Bebas Neue', sans-serif;
+    color: red;
+    font-size: 2rem;
+    margin-bottom: 10px;
+    text-shadow: 0 0 10px red;
+}
+
+.popup-box p {
+    color: white;
+    margin-bottom: 20px;
+    font-size: 1rem;
+}
+
+#retryBtn {
+    width: 120px;
+    padding: 10px;
+    background: red;
+    border: 2px solid #ff0000;
+    color: black;
+    font-weight: bold;
+    font-size: 1.1rem;
+    cursor: pointer;
+    border-radius: 8px;
+    box-shadow: 0 0 15px red;
+    transition: 0.3s;
+}
+
+#retryBtn:hover {
+    background: #ff3b3b;
+    transform: scale(1.08);
+    box-shadow: 0 0 22px red;
+}
+
+@keyframes popIn {
+    from { transform: scale(0.6); opacity: 0; }
+    to { transform: scale(1); opacity: 1; }
 }
 </style>
 
@@ -160,6 +217,15 @@ html, body {
 
 <!-- LOGIN CONTENT -->
 <div class="login-page">
+
+    <!-- ❌ CAPTCHA POPUP INSERTED HERE -->
+    <div id="captchaPopup" class="popup-overlay">
+        <div class="popup-box">
+            <h3>WRONG INPUT</h3>
+            <p>Please try again</p>
+            <button id="retryBtn">RETRY</button>
+        </div>
+    </div>
 
     <div class="form-container">
         <h2>Login</h2>
@@ -188,14 +254,18 @@ html, body {
             <button type="submit" id="loginBtn">Login</button>
         </form>
 
-        <p>Don't have an account? <a href="{{ url_for('register') }}">Register</a></p>
+        <!-- REGISTER LINK (patched effect added) -->
+        <p>Don't have an account?
+            <a href="{{ url_for('register') }}" id="registerLink">Register</a>
+        </p>
     </div>
 
     <!-- RETURN BUTTON -->
-    <a href="{{ url_for('landing_page') }}" class="return-btn">⬅ RETURN</a>
+    <a href="{{ url_for('landing_page') }}" class="return-btn" id="returnBtn">⬅ RETURN</a>
 </div>
 
 <script>
+/* CAPTCHA LOGIC */
 let captchaCode = '';
 let captchaShown = false;
 
@@ -224,24 +294,40 @@ document.getElementById('loginForm').addEventListener('submit', function(e) {
     const userInput = document.getElementById('captchaInput').value.toUpperCase();
 
     if (userInput !== captchaCode) {
-        alert('Incorrect code. Try again.');
-        generateCaptcha();
+        document.getElementById("captchaPopup").style.display = "flex";
         return;
     }
+
     this.submit();
 });
 
-/* 🔥 RETURN BUTTON — Cinematic Flash Transition */
-document.querySelector(".return-btn").addEventListener("click", function(e) {
-    e.preventDefault();
+/* RETRY BUTTON HANDLER */
+document.getElementById("retryBtn").addEventListener("click", function() {
+    document.getElementById("captchaPopup").style.display = "none";
+    generateCaptcha();
+    document.getElementById("captchaInput").value = "";
+    document.getElementById("captchaInput").focus();
+});
 
+/* 🔥 REUSABLE FLASH TRANSITION */
+function triggerFlashAndGo(url) {
     const flash = document.createElement("div");
-    flash.classList.add("return-flash");
+    flash.classList.add("flash-transition");
     document.body.appendChild(flash);
 
-    setTimeout(() => {
-        window.location.href = "{{ url_for('landing_page') }}";
-    }, 450);
+    setTimeout(() => { window.location.href = url; }, 450);
+}
+
+/* RETURN BUTTON EFFECT */
+document.getElementById("returnBtn").addEventListener("click", function(e) {
+    e.preventDefault();
+    triggerFlashAndGo("{{ url_for('landing_page') }}");
+});
+
+/* REGISTER BUTTON EFFECT */
+document.getElementById("registerLink").addEventListener("click", function(e) {
+    e.preventDefault();
+    triggerFlashAndGo("{{ url_for('register') }}");
 });
 </script>
 

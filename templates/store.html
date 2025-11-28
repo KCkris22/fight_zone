@@ -82,16 +82,15 @@
         </div>
 
         <!-- Product 9 -->
-    <div class="store-card">
-        <img src="{{ url_for('static', filename='images/headgear.jpg') }}" class="store-pic">
-        <h3>Head Gear</h3>
-        <p class="price">₱1,899</p>
-        <button class="store-btn" onclick="openPayment('Head Gear', 1899)">Buy Now</button>
-    </div>
+        <div class="store-card">
+            <img src="{{ url_for('static', filename='images/headgear.jpg') }}" class="store-pic">
+            <h3>Head Gear</h3>
+            <p class="price">₱1,899</p>
+            <button class="store-btn" onclick="openPayment('Head Gear', 1899)">Buy Now</button>
+        </div>
 
     </div>
 </section>
-
 
 <!-- ============================
       PAYMENT CHOICE POPUP
@@ -101,8 +100,8 @@
         <h3 id="storePopupTitle" class="popup-header"></h3>
         <p>Select a payment method:</p>
 
-        <button class="payment-option-btn" onclick="openStoreGCash()">📱 G-Cash</button>
-        <button class="payment-option-btn" onclick="openStoreBank()">🏦 Online Bank</button>
+        <button class="payment-option-btn" onclick="openStoreGCash()">G-Cash</button>
+        <button class="payment-option-btn" onclick="openStoreBank()">Online Bank</button>
 
         <button class="close-btn" onclick="closeAllPopups()">Cancel</button>
     </div>
@@ -113,7 +112,7 @@
 =============================== -->
 <div id="storeGCashPopup" class="popup-overlay">
     <div class="popup-box">
-        <h3 class="popup-header">G-Cash Payment</h3>
+        <h3 class="popup-header">Please scan QR via G-CASH</h3>
 
         <img src="{{ url_for('static', filename='images/gcash.jpg') }}" class="qr-image">
 
@@ -122,7 +121,7 @@
             <input type="hidden" id="storePrice" name="price">
             <input type="hidden" name="payment_method" value="GCASH">
 
-            <label>Upload G-Cash Proof (jpg, png, pdf):</label>
+            <label>Please upload your receipt for verification:</label>
             <input type="file" name="gcash_proof" accept=".jpg,.png,.pdf" required>
 
             <button class="proceed-btn" type="submit">Proceed</button>
@@ -144,13 +143,13 @@
             <input type="hidden" id="storePriceBank" name="price">
             <input type="hidden" name="payment_method" value="BANK">
 
-            <label>Full Name:</label>
+            <label>Full Account Name:</label>
             <input type="text" name="fullname" required>
 
-            <label>Card Number:</label>
+            <label>Card Number (16 digits):</label>
             <input type="text" maxlength="16" pattern="[0-9]{16}" name="card_number" required>
 
-            <label>CVV:</label>
+            <label>CVV (3 digits):</label>
             <input type="text" maxlength="3" pattern="[0-9]{3}" name="cvv" required>
 
             <button class="proceed-btn" type="submit">Proceed</button>
@@ -241,6 +240,62 @@ function closeAllPopups() {
     display:block;
     margin:10px auto;
 }
+
+/* ----------------------
+   STORE BACKGROUND + FALLING GLOVES
+------------------------ */
+.store-section {
+    position: relative;
+    background-color: #000;
+    padding: 60px 20px;
+    z-index: 1;
+}
+
+/* Full-screen background layer for falling gloves */
+.store-bg-layer {
+    position: fixed;
+    top: 0; left: 0;
+    width: 100%;
+    height: 100%;
+    pointer-events: none;
+    z-index: -1;
+}
+
+.falling-glove {
+    position: absolute;
+    font-size: 20px;
+    color: white;
+    user-select: none;
+    pointer-events: none;
+    animation-name: fall;
+    animation-timing-function: linear;
+    animation-iteration-count: infinite;
+}
+
+@keyframes fall {
+    0% { transform: translateY(-50px) rotate(0deg); opacity:1; }
+    100% { transform: translateY(100vh) rotate(360deg); opacity:0.7; }
+}
 </style>
+
+<script>
+document.addEventListener("DOMContentLoaded", () => {
+    const numberOfGloves = 80; // more gloves for full coverage
+    const bgLayer = document.createElement('div');
+    bgLayer.classList.add('store-bg-layer');
+    document.body.prepend(bgLayer); // fixed layer covers full viewport
+
+    for (let i = 0; i < numberOfGloves; i++) {
+        const glove = document.createElement('div');
+        glove.classList.add('falling-glove');
+        glove.innerText = '🥊';
+        glove.style.left = Math.random() * 100 + 'vw';
+        glove.style.fontSize = (15 + Math.random() * 25) + 'px';
+        glove.style.animationDuration = (4 + Math.random() * 6) + 's';
+        glove.style.animationDelay = Math.random() * 5 + 's';
+        bgLayer.appendChild(glove);
+    }
+});
+</script>
 
 {% endblock %}

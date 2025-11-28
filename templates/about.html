@@ -1,18 +1,460 @@
 {% extends "base.html" %}
 {% block content %}
-<section class="about-section">
-    <h1>About FightZone</h1>
-    <h2>
-        FightZone is the ultimate boxing gym that combines passion, training, and community.
-        Founded by <strong>Cynrics</strong>, our mission is to create champions—inside and outside the ring.
-        <br><br>
-        With professional trainers, elite equipment, and programs built for all levels,
-        you’re not just joining a gym—you’re joining a family of fighters.
-    </h2>
 
-    <div class="about-verse">
-        <span>Deuteronomy 20:4</span><br>
-        “for the Lord your God is he who goes with you to fight for you against your enemies, to give you the victory.”
+<style>
+/* Prevent sideways scroll */
+.about-wrapper {
+    overflow-x: hidden;
+    width: 100%;
+    box-sizing: border-box;
+}
+
+/* Hero section */
+.about-section {
+    position: relative;
+    width: 100%;
+    min-height: 100vh;
+    padding: 120px 40px 60px 40px;
+    color: white;
+    text-align: center;
+    background: url("{{ url_for('static', filename='images/about_image.jpg') }}") no-repeat center center/cover;
+    background-size: cover;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    animation: fadeIn 0.8s ease-out;
+}
+
+.about-section::before {
+    content: "";
+    position: absolute;
+    top: 0; left: 0;
+    width: 100%; height: 100%;
+    background: rgba(0,0,0,0.65);
+    backdrop-filter: blur(2px);
+    z-index: 0;
+}
+
+.about-section > * {
+    position: relative;
+    z-index: 2;
+}
+
+.about-section h1 {
+    font-size: 60px;
+    font-family: "Bebas Neue", sans-serif;
+    letter-spacing: 4px;
+    margin-bottom: 20px;
+    text-shadow: 0 0 18px red;
+}
+
+.about-section h2 {
+    width: 70%;
+    max-width: 900px;
+    font-size: 20px;
+    line-height: 1.7;
+    font-weight: 400;
+    color: #f2f2f2;
+    text-shadow: 0 0 6px black;
+    margin-bottom: 40px;
+}
+
+.about-verse {
+    font-size: 22px;
+    padding: 20px 40px;
+    background: rgba(0,0,0,0.45);
+}
+
+/* Fade animation */
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(20px); }
+    to   { opacity: 1; transform: translateY(0); }
+}
+
+/* Footer override */
+footer.about-footer {
+    background: rgba(0, 0, 0, 0.94) !important;
+    color: #fff !important;
+    padding: 18px 0 !important;
+    backdrop-filter: blur(6px) !important;
+    box-shadow: 0 -6px 20px rgba(0,0,0,0.6) !important;
+    z-index: 2000 !important;
+    width: 100% !important;
+    left: 0 !important;
+    position: fixed !important;
+    bottom: 0 !important;
+}
+
+/* Extra sections */
+.about-extra {
+    padding: 80px 40px;
+    background: #111;
+    color: #f2f2f2;
+    border-top: 2px solid #222;
+    text-align: center;
+}
+
+.section-title {
+    font-size: 40px;
+    margin-bottom: 25px;
+    font-family: "Bebas Neue", sans-serif;
+    letter-spacing: 2px;
+    color: #ff2e2e;
+}
+
+/* Story box */
+.story-box {
+    background: rgba(30, 30, 30, 0.9);
+    border: 2px solid #ff2e2e;
+    padding: 30px 40px;
+    margin: 20px auto;
+    max-width: 2000px;
+    border-radius: 12px;
+    box-shadow: 0 0 25px rgba(255, 46, 46, 0.4);
+    font-size: 18px;
+    line-height: 1.9;
+    text-align: center;
+}
+
+/* Why Choose list */
+.about-list {
+    list-style: none;
+    padding: 0;
+    margin: 0 auto 0 auto;
+    max-width: 600px;
+    font-size: 18px;
+    line-height: 1.8;
+}
+
+/* Trainer cards */
+.trainer-cards {
+    display: flex;
+    justify-content: center;
+    gap: 50px;
+    flex-wrap: wrap;
+}
+
+.trainer-card {
+    background: #1a1a1a;
+    padding: 25px;
+    width: 380px;
+    border-radius: 10px;
+    border: 1px solid #333;
+    color: #ddd;
+    text-align: center;
+    transition: 0.2s;
+    cursor: pointer;
+}
+
+.trainer-card:hover {
+    transform: translateY(-5px);
+    border-color: #ff2e2e;
+}
+
+.trainer-card img {
+    width: 100%;
+    height: 300px;
+    object-fit: cover;
+    border-radius: 8px;
+    margin-bottom: 15px;
+    border: 2px solid #ff2e2e;
+}
+
+.trainer-card h3 {
+    color: #ff2e2e;
+    text-shadow: 0 0 12px red;
+    font-family: "Bebas Neue", sans-serif;
+    margin-bottom: 12px;
+}
+
+.trainer-card p {
+    background: rgba(30,30,30,0.85);
+    border: 2px solid #ff2e2e;
+    border-radius: 10px;
+    padding: 15px;
+    font-size: 16px;
+    line-height: 1.8;
+    text-align: justify;
+    box-shadow: 0 0 20px rgba(255,46,46,0.3);
+}
+
+/* POPUP */
+.popup-overlay {
+    position: fixed;
+    top: 0; left: 0;
+    width: 100vw; height: 100vh;
+    background: rgba(0,0,0,0.9);
+    display: none;
+    justify-content: center;
+    align-items: center;
+    z-index: 8000;
+    padding: 20px;
+}
+
+.popup-box {
+    background: #0d0d0d;
+    border: 3px solid red;
+    box-shadow: 0 0 30px red;
+    max-width: 750px;
+    width: 100%;
+    border-radius: 12px;
+    padding: 30px 40px;
+    color: #f2f2f2;
+    position: relative;
+    display: flex;
+    gap: 25px;
+    animation: popupAppear 0.3s ease-out;
+    text-align: justify;
+}
+
+.popup-text {
+    flex: 3;
+}
+
+.popup-image {
+    flex: 1;
+    display: flex;
+    justify-content: center;
+    align-items: flex-start;
+}
+
+.popup-image img {
+    width: 140px;
+    height: 140px;
+    object-fit: cover;
+    border-radius: 10px;
+    border: 2px solid red;
+    box-shadow: 0 0 12px red;
+}
+
+.popup-box h2 {
+    font-family: "Bebas Neue", sans-serif;
+    color: red;
+    font-size: 2.4rem;
+    margin-bottom: 15px;
+    text-shadow: 0 0 12px red;
+}
+
+.close-popup-btn {
+    display: block;
+    margin: 20px auto 0 auto;
+    padding: 12px 25px;
+    background: red;
+    color: black;
+    font-weight: bold;
+    font-size: 1.1rem;
+    border: 2px solid #ff0000;
+    border-radius: 8px;
+    cursor: pointer;
+    box-shadow: 0 0 20px red;
+    transition: 0.3s;
+}
+
+.close-popup-btn:hover {
+    background: #ff3b3b;
+    transform: scale(1.05);
+}
+
+@keyframes popupAppear {
+    from { transform: scale(0.7); opacity: 0; }
+    to   { transform: scale(1); opacity: 1; }
+}
+</style>
+
+<div class="about-wrapper">
+
+    <!-- HERO -->
+    <section class="about-section">
+        <h1>About FightZone</h1>
+        <h2>
+            FightZone is the ultimate boxing gym that combines passion, training, and community.
+            Founded by <strong>Cynrics</strong>, our mission is to create champions—inside and outside the ring.
+            <br><br>
+            With professional trainers, elite equipment, and programs built for all levels,
+            you’re not just joining a gym—you’re joining a family of fighters.
+        </h2>
+
+        <div class="about-verse">
+            <span>Deuteronomy 20:4</span><br>
+            “for the Lord your God is he who goes with you to fight for you against your enemies, to give you the victory.”
+        </div>
+    </section>
+
+    <!-- STORY -->
+    <section class="about-extra">
+        <h2 class="section-title">Our Story</h2>
+        <div class="story-box">
+            FightZone began as a small, passionate community of fighters who believed boxing was more than a sport — it’s a lifestyle. Founded by <strong>Cynrics</strong>, FightZone grew from a garage training group into one of the most respected boxing gyms in the city. Our goal has always been the same: to help people build strength, discipline, and confidence that lasts a lifetime.
+        </div>
+    </section>
+
+    <!-- WHY CHOOSE -->
+    <section class="about-extra">
+        <h2 class="section-title">Why Choose FightZone?</h2>
+        <ul class="about-list">
+            <li>🥊 Elite-level coaching for all skill levels</li>
+            <li>🔥 Professional equipment & safe training environment</li>
+            <li>💪 Strength, conditioning & cardio programs</li>
+            <li>🤝 A strong community of motivated fighters</li>
+            <li>🏆 Training ideals focused on discipline, respect & growth</li>
+        </ul>
+    </section>
+
+    <!-- TRAINERS -->
+    <section class="about-extra">
+        <h2 class="section-title">Meet Our Trainers</h2>
+        <div class="story-box">
+            Our certified coaches have trained amateurs, professionals, and champions. Expect expert guidance, tough workouts, and the motivation you need to surpass your limits.
+        </div>
+
+        <div class="trainer-cards">
+
+            <div class="trainer-card" data-coach="pacman">
+                <img src="{{ url_for('static', filename='images/coach_pacman.jpg') }}">
+                <h3>Coach Pacman</h3>
+                <p>Former world champion specializing in speed, footwork, and ring IQ.</p>
+            </div>
+
+            <div class="trainer-card" data-coach="tank">
+                <img src="{{ url_for('static', filename='images/coach_tank.jpg') }}">
+                <h3>Coach Tank</h3>
+                <p>Power and conditioning expert known for knockout-grade strength training.</p>
+            </div>
+
+            <div class="trainer-card" data-coach="kris">
+                <img src="{{ url_for('static', filename='images/coach_kris.jpg') }}">
+                <h3>Coach Kris</h3>
+                <p>Beginner & youth specialist focusing on fundamentals, discipline, and safety.</p>
+            </div>
+
+        </div>
+    </section>
+
+    <!-- LOCATION -->
+    <section class="about-extra">
+        <h2 class="section-title">Our Location</h2>
+        <p>Come visit FightZone and experience real boxing culture in person.</p>
+
+        <iframe
+            src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3862.2731502825245!2d121.05392117331373!3d14.526362178893507!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x3397c9004406d39d%3A0x298affe03c98bd1b!2sFIGHT%20ZONE%20Boxing%20gym!5e0!3m2!1sen!2sph!4v1764255614561!5m2!1sen!2sph"
+            width="100%" height="380" style="border:0;" allowfullscreen="" loading="lazy">
+        </iframe>
+    </section>
+
+    <!-- CONTACT -->
+    <section class="about-extra">
+        <h2 class="section-title">Contact & Hours</h2>
+        <p><strong>📍 Address:</strong> FightZone Boxing Gym, Block 51 Lot 4 Phase 2, Pinagsama, Taguig City, 1639 Metro Manila</p>
+        <p><strong>📞 Phone:</strong> +63 920 504 2133</p>
+        <p><strong>📧 Email:</strong> fightzone@gmail.com</p>
+
+        <h3>⏰ Gym Hours</h3>
+        <p>Monday–Friday: 8:00 AM – 10:00 PM</p>
+        <p>Saturday: 9:00 AM – 8:30 PM</p>
+        <p>Sunday: Closed</p>
+    </section>
+
+</div>
+
+<!-- POPUP OVERLAY -->
+<div id="coachPopup" class="popup-overlay">
+    <div class="popup-box">
+
+        <div class="popup-text">
+            <h2 id="coachName"></h2>
+            <div id="coachDetails"></div>
+            <button class="close-popup-btn" id="closeCoachPopup">Return</button>
+        </div>
+
+        <div class="popup-image">
+            <img id="coachPopupImage" src="">
+        </div>
+
     </div>
-</section>
+</div>
+
+<script>
+
+/* Footer style toggle */
+(function(){
+    function addFooterClass(){
+        const footer = document.querySelector('footer');
+        if (!footer) return;
+        footer.classList.add('about-footer');
+    }
+    if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', addFooterClass);
+    } else {
+        addFooterClass();
+    }
+    window.addEventListener('beforeunload', function(){
+        const f = document.querySelector('footer');
+        if (f) f.classList.remove('about-footer');
+    });
+})();
+
+/* COACH POPUP DATA */
+const coaches = {
+    pacman: {
+        name: "Manny “Pacman” Pacquiao",
+        image: "{{ url_for('static', filename='images/coach_pacman.jpg') }}",
+        details: `
+            <p><strong>Record:</strong> 62 Wins (39 KOs), 8 Losses, 2 Draws</p>
+            <p><strong>Achievements:</strong></p>
+            <ul>
+                <li>The only 8-division world champion in boxing history</li>
+                <li>World titles across 4 decades</li>
+                <li>Boxer of the Decade (2000s)</li>
+                <li>Multiple Fighter of the Year awards</li>
+            </ul>
+        `
+    },
+    tank: {
+        name: "Gervonta “Tank” Davis",
+        image: "{{ url_for('static', filename='images/coach_tank.jpg') }}",
+        details: `
+            <p><strong>Record:</strong> 30-0-1 (28 KOs)</p>
+            <p><strong>Achievements:</strong></p>
+            <ul>
+                <li>IBF Super Featherweight Champion</li>
+                <li>WBA Super Featherweight Champion</li>
+                <li>WBA Lightweight Champion</li>
+                <li>WBA Super Lightweight Champion</li>
+                <li>Notable wins: Ryan Garcia, Frank Martin</li>
+            </ul>
+        `
+    },
+    kris: {
+        name: "Coach Kris",
+        image: "{{ url_for('static', filename='images/coach_kris.jpg') }}",
+        details: `
+            <p><strong>About Coach Kris:</strong></p>
+            <p>A fundamentals & youth boxing coach specializing in foundation, discipline, and safe training.</p>
+            <p><em>(You can expand this whenever you want.)</em></p>
+        `
+    }
+};
+
+/* OPEN POPUP */
+document.querySelectorAll('.trainer-card').forEach(card => {
+    card.addEventListener('click', () => {
+        const key = card.getAttribute('data-coach');
+
+        document.getElementById('coachName').innerHTML = coaches[key].name;
+        document.getElementById('coachDetails').innerHTML = coaches[key].details;
+
+        // NEW IMAGE INSERT
+        document.getElementById('coachPopupImage').src = coaches[key].image;
+
+        document.getElementById('coachPopup').style.display = 'flex';
+    });
+});
+
+/* CLOSE POPUP */
+document.getElementById('closeCoachPopup').addEventListener('click', () => {
+    document.getElementById('coachPopup').style.display = 'none';
+});
+</script>
+
 {% endblock %}
