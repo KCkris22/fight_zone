@@ -25,72 +25,90 @@
         {% if membership %}
         <div class="membership-box">
             <p><strong>Plan:</strong> {{ membership.plan }}</p>
-            <p><strong>Expiration Date:</strong> {{ membership.end_date }}</p>
-            <p><strong>Time Left:</strong> <span id="timer"></span></p>
+
+            {% if membership.status == "Pending" %}
+                <p>Status: ⏳ Waiting for admin approval</p>
+            {% elif membership.status == "Rejected" %}
+                <p>Status: ❌ Payment Rejected</p>
+                <script>
+                    alert("{{ membership.status_message }}");
+                </script>
+            {% elif membership.status == "Accepted" %}
+                <p><strong>Expiration Date:</strong> {{ membership.end_date }}</p>
+                <p><strong>Time Left:</strong> <span id="timer"></span></p>
+
+                <script>
+                    const endDate = new Date("{{ membership.end_date_js }}").getTime();
+
+                    setInterval(() => {
+                        const now = new Date().getTime();
+                        const diff = endDate - now;
+
+                        if (diff <= 0) {
+                            document.getElementById("timer").innerHTML = "Expired";
+                            return;
+                        }
+
+                        const days = Math.floor(diff / (1000 * 60 * 60 * 24));
+                        const hours = Math.floor((diff % (1000*60*60*24)) / (1000*60*60));
+                        const mins = Math.floor((diff % (1000*60*60)) / (1000*60));
+                        const secs = Math.floor((diff % (1000*60)) / 1000);
+
+                        document.getElementById("timer").innerHTML =
+                            days + "d " + hours + "h " + mins + "m " + secs + "s";
+                    }, 1000);
+                </script>
+            {% else %}
+                <p>Status: Unknown</p>
+            {% endif %}
+
         </div>
-
-        <script>
-            const endDate = new Date("{{ membership.end_date_js }}").getTime();
-
-            setInterval(() => {
-                const now = new Date().getTime();
-                const diff = endDate - now;
-
-                if (diff <= 0) {
-                    document.getElementById("timer").innerHTML = "Expired";
-                    return;
-                }
-
-                const days = Math.floor(diff / (1000 * 60 * 60 * 24));
-                const hours = Math.floor((diff % (1000*60*60*24)) / (1000*60*60));
-                const mins = Math.floor((diff % (1000*60*60)) / (1000*60));
-                const secs = Math.floor((diff % (1000*60)) / 1000);
-
-                document.getElementById("timer").innerHTML =
-                    days + "d " + hours + "h " + mins + "m " + secs + "s";
-            }, 1000);
-        </script>
-
         {% else %}
-            <p>No active membership.</p>
+            <p>No membership found.</p>
         {% endif %}
     </div>
 
     <!-- ORDER HISTORY -->
-    <div class="account-box">
-        <h2>Order History</h2>
+<div class="account-box">
+    <h2>Order History</h2>
 
-        {% if orders %}
-            <table class="order-table">
-                <tr>
-                    <th>Item</th>
-                    <th>Date</th>
-                    <th>Status</th>
-                </tr>
-                {% for order in orders %}
-                <tr>
-                    <td>{{ order.item }}</td>
-                    <td>{{ order.date }}</td>
-                    <td>
-                        {% if order.status == "packed" %}
-                            📦 Packed
-                        {% elif order.status == "shipped" %}
-                            🚚 Shipped
-                        {% elif order.status == "arrived" %}
-                            ✅ Arrived
-                        {% else %}
-                            Pending
-                        {% endif %}
-                    </td>
-                </tr>
-                {% endfor %}
-            </table>
-        {% else %}
-            <p>No orders found.</p>
-        {% endif %}
-    </div>
-
+    {% if orders %}
+        <table class="order-table">
+            <tr>
+                <th>Item</th>
+                <th>Date</th>
+                <th>Status</th>
+            </tr>
+            {% for order in orders %}
+            <tr>
+                <td>{{ order.item }}</td>
+                <td>{{ order.created_at.strftime("%Y-%m-%d") if order.created_at else "Unknown" }}</td>
+                <td>
+                    {% if order.status == "Pending" %}
+                        ⏳ Pending
+                    {% elif order.status == "Accepted" %}
+                        {% set deliver_date = order.delivery_date %}
+                        📦 To be delivered on {{ order.delivery_date }} to {{ user.address }}
+                    {% elif order.status == "Rejected" %}
+                        ❌ Rejected{% if order.status_message %} – {{ order.status_message }}{% endif %}
+                    {% elif order.status == "packed" %}
+                        📦 Packed
+                    {% elif order.status == "shipped" %}
+                        🚚 Shipped
+                    {% elif order.status == "arrived" %}
+                        ✅ Arrived
+                    {% else %}
+                        Pending
+                    {% endif %}
+                </td>
+            </tr>
+            {% endfor %}
+        </table>
+    {% else %}
+        <p>No orders found.</p>
+    {% endif %}
 </div>
+
 
 <!-- RED DYNAMIC BUTTON EFFECT AND MEMBERSHIP BOX -->
 <style>
@@ -118,11 +136,11 @@
     color: #fff;
     padding: 15px 20px;
     border-radius: 8px;
-    text-align: justify;       /* justifies the content */
+    text-align: justify;
     box-shadow: 0 0 8px #ff0000, 0 0 16px #ff4d4d;
     animation: pulse-membership 1.5s infinite alternate;
     max-width: 300px;
-    margin: 10px auto; /* centers the box */
+    margin: 10px auto;
 }
 
 @keyframes pulse-membership {
