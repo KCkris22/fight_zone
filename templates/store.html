@@ -101,7 +101,7 @@
         <p>Select a payment method:</p>
 
         <button class="payment-option-btn" onclick="openStoreGCash()">G-Cash</button>
-        <button class="payment-option-btn" onclick="openStoreBank()">Online Bank</button>
+        <button class="payment-option-btn" onclick="openStoreBankStep1()">Online Bank</button>
 
         <button class="close-btn" onclick="closeAllPopups()">Cancel</button>
     </div>
@@ -132,16 +132,73 @@
 </div>
 
 <!-- ============================
-      STORE BANK POPUP
+      STORE BANK STEP 1 POPUP (Choose Bank)
 =============================== -->
-<div id="storeBankPopup" class="popup-overlay">
+<div id="storeBankStep1Popup" class="popup-overlay">
     <div class="popup-box">
-        <h3 class="popup-header">Online Bank Payment</h3>
+        <h3 class="popup-header">Select Bank</h3>
+
+        <button class="payment-option-btn" onclick="openStoreBankStep2('GoTyme')">GoTyme</button>
+        <button class="payment-option-btn" onclick="openStoreBankStep2('Union Bank')">Union Bank</button>
+
+        <button class="close-btn" onclick="closeAllPopups()">Cancel</button>
+    </div>
+</div>
+
+<!-- ============================
+      STORE BANK STEP 2 POPUP (QR or Card Input)
+=============================== -->
+<div id="storeBankStep2Popup" class="popup-overlay">
+    <div class="popup-box">
+        <h3 id="storeBankSelectedTitle" class="popup-header"></h3>
+        <p>Select payment type:</p>
+
+        <button class="payment-option-btn" onclick="openStoreBankQR()">QR Payment</button>
+        <button class="payment-option-btn" onclick="openStoreBankCard()">Input Card Details</button>
+
+        <button class="close-btn" onclick="closeAllPopups()">Cancel</button>
+    </div>
+</div>
+
+<!-- ============================
+      STORE BANK QR POPUP
+=============================== -->
+<div id="storeBankQRPopup" class="popup-overlay">
+    <div class="popup-box">
+        <h3 class="popup-header">Scan QR via Bank</h3>
+
+        <img src="{{ url_for('static', filename='images/gcash.jpg') }}" class="qr-image">
+
+        <form method="POST" enctype="multipart/form-data" action="{{ url_for('store_pay') }}">
+            <input type="hidden" id="storeProductQR" name="product_name">
+            <input type="hidden" id="storePriceQR" name="price">
+            <input type="hidden" id="storeBankQRName" name="bank_name">
+            <input type="hidden" name="payment_method" value="BANK">
+            <input type="hidden" name="payment_type" value="QR">
+
+            <label>Please upload your receipt for verification:</label>
+            <input type="file" name="bank_proof" accept=".jpg,.png,.pdf" required>
+
+            <button class="proceed-btn" type="submit">Proceed</button>
+        </form>
+
+        <button class="close-btn" onclick="closeAllPopups()">Cancel</button>
+    </div>
+</div>
+
+<!-- ============================
+      STORE BANK CARD INPUT POPUP
+=============================== -->
+<div id="storeBankCardPopup" class="popup-overlay">
+    <div class="popup-box">
+        <h3 class="popup-header">Enter Card Details</h3>
 
         <form method="POST" action="{{ url_for('store_pay') }}">
-            <input type="hidden" id="storeProductBank" name="product_name">
-            <input type="hidden" id="storePriceBank" name="price">
+            <input type="hidden" id="storeProductCard" name="product_name">
+            <input type="hidden" id="storePriceCard" name="price">
+            <input type="hidden" id="storeBankCardName" name="bank_name">
             <input type="hidden" name="payment_method" value="BANK">
+            <input type="hidden" name="payment_type" value="CARD">
 
             <label>Full Account Name:</label>
             <input type="text" name="fullname" required>
@@ -160,10 +217,12 @@
 </div>
 
 <script>
-// OPEN STORE PAYMENT
+// STORE PAYMENT VARIABLES
 let storeProduct = "";
 let storePrice = "";
+let storeBankSelected = "";
 
+// OPEN STORE PAYMENT
 function openPayment(product, price) {
     storeProduct = product;
     storePrice = price;
@@ -184,16 +243,46 @@ function openStoreGCash() {
     document.getElementById("storeGCashPopup").style.display = "flex";
 }
 
-// OPEN BANK
-function openStoreBank() {
+// STEP 1: CHOOSE BANK
+function openStoreBankStep1() {
     document.getElementById("paymentPopup").style.display = "none";
-
-    document.getElementById("storeProductBank").value = storeProduct;
-    document.getElementById("storePriceBank").value = storePrice;
-
-    document.getElementById("storeBankPopup").style.display = "flex";
+    document.getElementById("storeBankStep1Popup").style.display = "flex";
 }
 
+// STEP 2: BANK SELECTED
+function openStoreBankStep2(bankName) {
+    storeBankSelected = bankName;
+    document.getElementById("storeBankStep1Popup").style.display = "none";
+
+    document.getElementById("storeBankSelectedTitle").innerText =
+        `Bank: ${bankName}`;
+
+    document.getElementById("storeBankStep2Popup").style.display = "flex";
+}
+
+// BANK QR PAYMENT
+function openStoreBankQR() {
+    document.getElementById("storeBankStep2Popup").style.display = "none";
+
+    document.getElementById("storeProductQR").value = storeProduct;
+    document.getElementById("storePriceQR").value = storePrice;
+    document.getElementById("storeBankQRName").value = storeBankSelected;
+
+    document.getElementById("storeBankQRPopup").style.display = "flex";
+}
+
+// BANK CARD PAYMENT
+function openStoreBankCard() {
+    document.getElementById("storeBankStep2Popup").style.display = "none";
+
+    document.getElementById("storeProductCard").value = storeProduct;
+    document.getElementById("storePriceCard").value = storePrice;
+    document.getElementById("storeBankCardName").value = storeBankSelected;
+
+    document.getElementById("storeBankCardPopup").style.display = "flex";
+}
+
+// CLOSE ALL POPUPS
 function closeAllPopups() {
     document.querySelectorAll(".popup-overlay")
         .forEach(p => p.style.display = "none");
@@ -201,7 +290,7 @@ function closeAllPopups() {
 </script>
 
 <style>
-/* Reuse your membership popup styling */
+/* Reuse membership popup styling */
 .popup-overlay {
     position: fixed;
     top:0; left:0;
@@ -251,7 +340,6 @@ function closeAllPopups() {
     z-index: 1;
 }
 
-/* Full-screen background layer for falling gloves */
 .store-bg-layer {
     position: fixed;
     top: 0; left: 0;
@@ -283,7 +371,7 @@ document.addEventListener("DOMContentLoaded", () => {
     const numberOfGloves = 80; // more gloves for full coverage
     const bgLayer = document.createElement('div');
     bgLayer.classList.add('store-bg-layer');
-    document.body.prepend(bgLayer); // fixed layer covers full viewport
+    document.body.prepend(bgLayer);
 
     for (let i = 0; i < numberOfGloves; i++) {
         const glove = document.createElement('div');

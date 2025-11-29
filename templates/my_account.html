@@ -1,0 +1,135 @@
+{% extends "base.html" %}
+{% block content %}
+
+<div class="account-container">
+
+    <h1 class="account-title">User Info & Details</h1>
+
+    <!-- MY ACCOUNT BUTTON WITH RED DYNAMIC EFFECT -->
+    <div class="account-box" style="display: flex; justify-content: center; margin-bottom: 20px;">
+        <button class="my-account-btn">My Account</button>
+    </div>
+
+    <!-- USER PROFILE BOX -->
+    <div class="account-box">
+        <h2>Profile Information</h2>
+        <p><strong>Full Name:</strong> {{ session['username'] }}</p>
+        <p><strong>Email:</strong> {{ user.email }}</p>
+        <p><strong>Address:</strong> {{ user.address }}</p>
+    </div>
+
+    <!-- MEMBERSHIP STATUS WITH RED GLOWING BOX -->
+    <div class="account-box">
+        <h2>Membership Status</h2>
+
+        {% if membership %}
+        <div class="membership-box">
+            <p><strong>Plan:</strong> {{ membership.plan }}</p>
+            <p><strong>Expiration Date:</strong> {{ membership.end_date }}</p>
+            <p><strong>Time Left:</strong> <span id="timer"></span></p>
+        </div>
+
+        <script>
+            const endDate = new Date("{{ membership.end_date_js }}").getTime();
+
+            setInterval(() => {
+                const now = new Date().getTime();
+                const diff = endDate - now;
+
+                if (diff <= 0) {
+                    document.getElementById("timer").innerHTML = "Expired";
+                    return;
+                }
+
+                const days = Math.floor(diff / (1000 * 60 * 60 * 24));
+                const hours = Math.floor((diff % (1000*60*60*24)) / (1000*60*60));
+                const mins = Math.floor((diff % (1000*60*60)) / (1000*60));
+                const secs = Math.floor((diff % (1000*60)) / 1000);
+
+                document.getElementById("timer").innerHTML =
+                    days + "d " + hours + "h " + mins + "m " + secs + "s";
+            }, 1000);
+        </script>
+
+        {% else %}
+            <p>No active membership.</p>
+        {% endif %}
+    </div>
+
+    <!-- ORDER HISTORY -->
+    <div class="account-box">
+        <h2>Order History</h2>
+
+        {% if orders %}
+            <table class="order-table">
+                <tr>
+                    <th>Item</th>
+                    <th>Date</th>
+                    <th>Status</th>
+                </tr>
+                {% for order in orders %}
+                <tr>
+                    <td>{{ order.item }}</td>
+                    <td>{{ order.date }}</td>
+                    <td>
+                        {% if order.status == "packed" %}
+                            📦 Packed
+                        {% elif order.status == "shipped" %}
+                            🚚 Shipped
+                        {% elif order.status == "arrived" %}
+                            ✅ Arrived
+                        {% else %}
+                            Pending
+                        {% endif %}
+                    </td>
+                </tr>
+                {% endfor %}
+            </table>
+        {% else %}
+            <p>No orders found.</p>
+        {% endif %}
+    </div>
+
+</div>
+
+<!-- RED DYNAMIC BUTTON EFFECT AND MEMBERSHIP BOX -->
+<style>
+.my-account-btn {
+    background-color: #ff0000;
+    color: white;
+    font-weight: bold;
+    padding: 10px 20px;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    box-shadow: 0 0 10px #ff0000;
+    animation: pulse-red 1.5s infinite alternate;
+}
+
+@keyframes pulse-red {
+    0% { box-shadow: 0 0 5px #ff0000, 0 0 10px #ff4d4d, 0 0 15px #ff6666; }
+    50% { box-shadow: 0 0 10px #ff0000, 0 0 20px #ff4d4d, 0 0 30px #ff6666; }
+    100% { box-shadow: 0 0 5px #ff0000, 0 0 10px #ff4d4d, 0 0 15px #ff6666; }
+}
+
+/* Membership mini red glowing box */
+.membership-box {
+    background-color: #330000;
+    color: #fff;
+    padding: 15px 20px;
+    border-radius: 8px;
+    text-align: justify;       /* justifies the content */
+    box-shadow: 0 0 8px #ff0000, 0 0 16px #ff4d4d;
+    animation: pulse-membership 1.5s infinite alternate;
+    max-width: 300px;
+    margin: 10px auto; /* centers the box */
+}
+
+@keyframes pulse-membership {
+    0% { box-shadow: 0 0 5px #ff0000, 0 0 10px #ff4d4d; }
+    50% { box-shadow: 0 0 10px #ff0000, 0 0 20px #ff4d4d; }
+    100% { box-shadow: 0 0 5px #ff0000, 0 0 10px #ff4d4d; }
+}
+</style>
+
+{% endblock %}

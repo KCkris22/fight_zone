@@ -35,7 +35,6 @@
     to { opacity: 1; transform: translateY(0);}
 }
 
-/* Hide after 5 seconds */
 .status-popup.fade-out {
     animation: fadeOut 1s forwards;
 }
@@ -43,6 +42,103 @@
 @keyframes fadeOut {
     to { opacity: 0; transform: translateY(-20px);}
 }
+
+/* Popup overlay / box reuse (keeps your theme) */
+.popup-overlay {
+    display: none;
+    position: fixed;
+    top:0; left:0;
+    width:100%; height:100%;
+    justify-content:center;
+    align-items:center;
+    background: rgba(0,0,0,0.8);
+    z-index: 9999;
+}
+
+.popup-box {
+    background:#111;
+    border:3px solid red;
+    box-shadow:0 0 20px red;
+    padding:20px;
+    width:420px;
+    max-width:95%;
+    color:white;
+    border-radius:12px;
+    text-align:center;
+}
+
+/* Styled bank select (boxed red/black) */
+.bank-select {
+    display:block;
+    width:100%;
+    padding:10px 14px;
+    border-radius:10px;
+    background: #0d0d0d;
+    color: #fff;
+    border: 2px solid #ff0000;
+    box-shadow: 0 0 12px rgba(255,0,0,0.25), inset 0 0 8px rgba(255,0,0,0.08);
+    font-weight:700;
+    font-size:16px;
+    margin:10px 0 0 0;
+    -webkit-appearance:none;
+    -moz-appearance:none;
+    appearance:none;
+    cursor: pointer;
+}
+
+/* small helper row for the bank choice popup */
+.choice-row {
+    display:flex;
+    gap:12px;
+    margin-top:16px;
+    justify-content:center;
+    flex-wrap:wrap;
+}
+.choice-btn {
+    background: linear-gradient(90deg, #ff0000, #b71c1c);
+    color: #000;
+    border: none;
+    padding: 10px 16px;
+    border-radius: 8px;
+    font-weight: 800;
+    cursor: pointer;
+    box-shadow: 0 0 12px rgba(255,0,0,0.35);
+}
+.choice-btn:hover { transform: scale(1.02); }
+
+/* QR image style (same look as gcash) */
+.qr-image {
+    width:220px;
+    display:block;
+    margin:10px auto;
+    border: 2px solid red;
+    border-radius: 8px;
+}
+
+/* Manual input fields keep look of your site */
+.popup-box input[type="text"],
+.popup-box input[type="file"] {
+    width: 95%;
+    padding: 10px;
+    margin: 8px 0;
+    border-radius: 8px;
+    border: 2px solid #b71c1c;
+    background: #000;
+    color: #fff;
+    font-weight:700;
+}
+.proceed-btn, .close-btn {
+    width: 100%;
+    margin-top: 10px;
+    padding: 10px;
+    background: red;
+    border: none;
+    color: black;
+    font-weight: bold;
+    border-radius: 8px;
+    cursor: pointer;
+}
+
 </style>
 
 <!-- STATUS POPUP -->
@@ -131,7 +227,7 @@ setTimeout(() => {
     </div>
 </div>
 
-<!-- GCASH POPUP -->
+<!-- GCASH POPUP (unchanged) -->
 <div id="gcashPopup" class="popup-overlay">
     <div class="popup-box">
         <h3 class="popup-header">Please scan QR via G-CASH</h3>
@@ -141,6 +237,7 @@ setTimeout(() => {
         <form id="gcashForm" method="POST" enctype="multipart/form-data" action="/pay/gcash">
             <input type="hidden" id="gcashPlan" name="plan">
             <input type="hidden" id="gcashPrice" name="price">
+            <input type="hidden" id="gcashBank" name="bank_name" value="GCASH">
 
             <label>Please upload your receipt for verification:</label>
             <input type="file" name="payment_proof" accept=".jpg,.png,.pdf" required>
@@ -152,14 +249,78 @@ setTimeout(() => {
     </div>
 </div>
 
-<!-- BANK POPUP -->
+<!-- -----------------------
+     BANK: initial popup with styled selector
+   ------------------------ -->
 <div id="bankPopup" class="popup-overlay">
     <div class="popup-box">
         <h3 class="popup-header">Online Bank Payment</h3>
 
-        <form id="bankForm" method="POST" action="{{ url_for('pay_bank') }}">
-            <input type="hidden" id="bankPlan" name="plan">
-            <input type="hidden" id="bankPrice" name="price">
+        <p style="margin-top:6px;">Choose a bank:</p>
+        <select id="bankSelector" class="bank-select" aria-label="Select bank">
+            <option value="">-- Select Bank --</option>
+            <option value="gotyme">GoTyme Bank</option>
+            <option value="unionbank">Union Bank</option>
+        </select>
+
+        <p style="font-size:0.9rem; color:#ddd; margin-top:8px;">After selecting, you'll choose either QR or Manual Card input.</p>
+
+        <button class="close-btn" style="margin-top:12px;" onclick="closeAllPopups()">Cancel</button>
+    </div>
+</div>
+
+<!-- -----------------------
+     BANK CHOICE: second popup (QR or Manual)
+   ------------------------ -->
+<div id="bankChoicePopup" class="popup-overlay">
+    <div class="popup-box">
+        <h3 class="popup-header">Select Bank Payment Option</h3>
+        <div class="choice-row">
+            <button class="choice-btn" onclick="openBankQR()">QR Payment</button>
+            <button class="choice-btn" onclick="openBankManual()">Input Card Details</button>
+        </div>
+
+        <button class="close-btn" style="margin-top:16px;" onclick="closeAllPopups()">Cancel</button>
+    </div>
+</div>
+
+<!-- -----------------------
+     BANK QR Popup (reuses GCash-style layout, posts to /pay/gcash)
+   ------------------------ -->
+<div id="bankQRPopup" class="popup-overlay">
+    <div class="popup-box">
+        <h3 class="popup-header" id="bankQRHeader">Scan Bank QR</h3>
+
+        <img id="bankQRImage" src="" class="qr-image">
+
+        <!-- Reuse GCash endpoint so admin receives a gcash_proof file and verifies same flow.
+             We include a hidden bank_name so admin can see which bank. -->
+        <form id="bankQRForm" method="POST" enctype="multipart/form-data" action="/pay/gcash">
+            <input type="hidden" id="bankQRPlan" name="plan">
+            <input type="hidden" id="bankQRPrice" name="price">
+            <input type="hidden" id="bankQRName" name="bank_name">
+
+            <label>Please upload your receipt for verification:</label>
+            <input type="file" name="payment_proof" accept=".jpg,.png,.pdf" required>
+
+            <button class="proceed-btn" type="submit">Proceed</button>
+        </form>
+
+        <button class="close-btn" onclick="closeAllPopups()">Cancel</button>
+    </div>
+</div>
+
+<!-- -----------------------
+     BANK MANUAL Popup (posts to /pay/bank)
+   ------------------------ -->
+<div id="bankManualPopup" class="popup-overlay">
+    <div class="popup-box">
+        <h3 class="popup-header">Manual Bank / Card Payment</h3>
+
+        <form id="bankManualForm" method="POST" action="{{ url_for('pay_bank') }}">
+            <input type="hidden" id="manualPlan" name="plan">
+            <input type="hidden" id="manualPrice" name="price">
+            <input type="hidden" id="manualBank" name="bank">
 
             <label>Full Account Name:</label>
             <input type="text" name="fullname" required>
@@ -167,7 +328,7 @@ setTimeout(() => {
             <label>Card Number (16 digits):</label>
             <input type="text" name="card_number" maxlength="16" pattern="[0-9]{16}" required>
 
-            <label>CVV (3 digits):</label>s
+            <label>CVV (3 digits):</label>
             <input type="text" name="cvv" maxlength="3" pattern="[0-9]{3}" required>
 
             <button class="proceed-btn" type="submit">Proceed</button>
@@ -181,6 +342,17 @@ setTimeout(() => {
 let chosenPlan = "";
 let chosenPrice = "";
 
+// helper to show an overlay
+function showOverlay(id) {
+    closeAllPopups();
+    const el = document.getElementById(id);
+    if (el) el.style.display = "flex";
+}
+function hideOverlay(id) {
+    const el = document.getElementById(id);
+    if (el) el.style.display = "none";
+}
+
 // OPEN PAYMENT OPTIONS
 function openPayment(plan, price) {
     chosenPlan = plan;
@@ -189,32 +361,85 @@ function openPayment(plan, price) {
     document.getElementById("paymentTitle").innerText =
         `Join ${plan} Plan — ₱${price}`;
 
-    document.getElementById("paymentPopup").style.display = "flex";
+    showOverlay('paymentPopup');
 }
 
-// OPEN GCASH
+// OPEN GCASH (unchanged)
 function openGCash() {
-    document.getElementById("paymentPopup").style.display = "none";
+    hideOverlay('paymentPopup');
 
     document.getElementById("gcashPlan").value = chosenPlan;
     document.getElementById("gcashPrice").value = chosenPrice;
-
     document.getElementById("gcashPopup").style.display = "flex";
 }
 
-// OPEN BANK
+// OPEN BANK (first popup with styled select)
 function openBank() {
-    document.getElementById("paymentPopup").style.display = "none";
+    hideOverlay('paymentPopup');
 
-    document.getElementById("bankPlan").value = chosenPlan;
-    document.getElementById("bankPrice").value = chosenPrice;
+    // clear previous selections
+    document.getElementById('bankSelector').value = "";
+    showOverlay('bankPopup');
 
-    document.getElementById("bankPopup").style.display = "flex";
+    // attach onchange handler to bankSelector to move to choice popup
+    const sel = document.getElementById('bankSelector');
+    sel.onchange = function() {
+        if (!sel.value) return;
+        // store selected bank & open the next popup
+        window.selectedBankForMembership = sel.value; // global temp
+        hideOverlay('bankPopup');
+        // after small delay allow animation to settle then show choice popup
+        setTimeout(() => showOverlay('bankChoicePopup'), 150);
+    };
 }
 
-// CLOSE ALL POPUPS
+// After bank chosen -> user selects QR or Manual
+function openBankQR() {
+    hideOverlay('bankChoicePopup');
+
+    const bank = window.selectedBankForMembership || '';
+    const qrImage = document.getElementById('bankQRImage');
+    const qrHeader = document.getElementById('bankQRHeader');
+
+    // set QR image based on bank
+    if (bank === 'gotyme') {
+        qrImage.src = "{{ url_for('static', filename='images/gotyme.jpg') }}";
+        qrHeader.innerText = "Scan GoTyme QR";
+    } else if (bank === 'unionbank') {
+        qrImage.src = "{{ url_for('static', filename='images/unionbank.jpg') }}";
+        qrHeader.innerText = "Scan Union Bank QR";
+    } else {
+        qrImage.src = "{{ url_for('static', filename='images/gcash.jpg') }}"; // fallback
+        qrHeader.innerText = "Scan QR";
+    }
+
+    // fill hidden plan/price/bank fields in the QR form
+    document.getElementById('bankQRPlan').value = chosenPlan;
+    document.getElementById('bankQRPrice').value = chosenPrice;
+    document.getElementById('bankQRName').value = bank;
+
+    // show the QR popup (reuses /pay/gcash endpoint)
+    showOverlay('bankQRPopup');
+}
+
+function openBankManual() {
+    hideOverlay('bankChoicePopup');
+
+    const bank = window.selectedBankForMembership || '';
+
+    // populate the manual form hidden fields
+    document.getElementById('manualPlan').value = chosenPlan;
+    document.getElementById('manualPrice').value = chosenPrice;
+    document.getElementById('manualBank').value = bank;
+
+    showOverlay('bankManualPopup');
+}
+
+// Close all overlays
 function closeAllPopups() {
     document.querySelectorAll(".popup-overlay").forEach(p => p.style.display = "none");
+    // clear temp selected bank
+    window.selectedBankForMembership = null;
 }
 </script>
 

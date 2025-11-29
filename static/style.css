@@ -1122,3 +1122,56 @@ input[type="file"] {
         grid-template-columns: repeat(1, 1fr);
     }
 }
+
+.account-container {
+    padding: 100px 40px;
+    text-align: center;
+    color: #fff;
+}
+
+.account-title {
+    font-family: 'Bebas Neue';
+    font-size: 3rem;
+    color: red;
+    text-shadow: 0 0 15px red;
+    margin-bottom: 30px;
+}
+
+.account-box {
+    background: #111;
+    border: 2px solid red;
+    padding: 25px;
+    width: 60%;
+    margin: 25px auto;
+    border-radius: 12px;
+    box-shadow: 0 0 18px red;
+    text-align: left;
+}
+
+.account-box h2 {
+    color: #ff4444;
+    border-bottom: 2px solid red;
+    padding-bottom: 5px;
+    margin-bottom: 15px;
+    text-transform: uppercase;
+}
+
+.order-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 10px;
+}
+
+.order-table th, .order-table td {
+    border: 1px solid red;
+    padding: 10px;
+    text-align: center;
+}
+
+.order-table th {
+    background: #b71c1c;
+}
+
+.order-table tr:nth-child(even) {
+    background: #1a1a1a;
+}

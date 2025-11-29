@@ -14,15 +14,14 @@
         <div class="logo-box">
             <a href="{{ url_for('home') }}" class="logo-text">🥊 FightZone 🥊</a>
         </div>
-            <nav class="nav-links">
-                <a href="{{ url_for('about') }}">About</a>
-                <a href="{{ url_for('benefits') }}">Benefits</a>
-                <a href="{{ url_for('membership') }}">Membership</a>
-                <a href="{{ url_for('store') }}">Store</a>
-                <a href="{{ url_for('logout') }}" class="logout">Logout</a>
-            </nav>
-
-
+        <nav class="nav-links">
+            <a href="{{ url_for('my_account') }}" class="nav-btn my-account-link">My Account</a>
+            <a href="{{ url_for('about') }}" class="nav-btn">About</a>
+            <a href="{{ url_for('benefits') }}" class="nav-btn">Benefits</a>
+            <a href="{{ url_for('membership') }}" class="nav-btn">Membership</a>
+            <a href="{{ url_for('store') }}" class="nav-btn">Store</a>
+            <a href="{{ url_for('logout') }}" class="nav-btn logout">Logout</a>
+        </nav>
     </header>
     {% endif %}
 
@@ -44,7 +43,7 @@
     const isLoggedIn = {{ 'true' if session.get('user_id') else 'false' }};
 
     // Allowed pages for transitions
-    const allowedRoutes = ["/home", "/about", "/benefits", "/membership", "/store"];
+    const allowedRoutes = ["/home", "/about", "/benefits", "/membership", "/store", "/my_account"];
 
     function isAllowed(url) {
         try {
@@ -55,12 +54,9 @@
         }
     }
 
-    if (!isLoggedIn) {
-        console.log("Fade disabled (not logged in)");
-        return;
-    }
+    if (!isLoggedIn) return;
 
-    // Intercept link clicks
+    // Intercept link clicks for fade effect
     document.addEventListener("click", function(e){
         if (e.defaultPrevented) return;
         if (e.button !== 0) return;
@@ -69,27 +65,54 @@
         let a = e.target;
         while (a && a.tagName !== "A") a = a.parentElement;
         if (!a || !a.href) return;
-
         if (!isAllowed(a.href)) return;
 
         e.preventDefault();
-        body.classList.add("fade-out");
 
-        setTimeout(() => {
-            window.location.href = a.href;
-        }, 350);
+        // Add glow for My Account link if clicked
+        if (a.classList.contains("my-account-link")) {
+            a.classList.add("clicked");
+            setTimeout(() => {
+                body.classList.add("fade-out");
+                setTimeout(() => { window.location.href = a.href; }, 350);
+            }, 200); // short delay to show glow
+        } else {
+            body.classList.add("fade-out");
+            setTimeout(() => { window.location.href = a.href; }, 350);
+        }
     });
 
 })();
 </script>
 
 <style>
+/* Fade transition */
 #site-body.fade-transition {
   opacity: 1;
   transition: opacity 350ms ease-in-out;
 }
 #site-body.fade-out {
   opacity: 0 !important;
+}
+
+/* Navbar buttons */
+.nav-btn {
+    padding: 8px 16px;
+    border-radius: 6px;
+    text-decoration: none;
+    color: white;
+    transition: all 0.3s ease;
+}
+
+/* Dynamic red glow for My Account link when clicked */
+.my-account-link.clicked {
+    animation: pulse-red 1.5s infinite alternate;
+}
+
+@keyframes pulse-red {
+    0% { box-shadow: 0 0 5px #ff0000, 0 0 10px #ff4d4d, 0 0 15px #ff6666; }
+    50% { box-shadow: 0 0 10px #ff0000, 0 0 20px #ff4d4d, 0 0 30px #ff6666; }
+    100% { box-shadow: 0 0 5px #ff0000, 0 0 10px #ff4d4d, 0 0 15px #ff6666; }
 }
 </style>
 

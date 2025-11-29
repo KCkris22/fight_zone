@@ -460,6 +460,111 @@ def store():
         return redirect(url_for('login'))
     return render_template('store.html')
 
+
+@app.route("/my_account")
+def my_account():
+    # ensure logged in
+    if "user_id" not in session:
+        return redirect(url_for("login"))
+
+    user_id = session["user_id"]
+    conn = None
+    cursor = None
+
+    try:
+        conn = get_db_connection()
+        cursor = conn.cursor(dictionary=True)
+
+        # 1) Fetch user basic profile
+        cursor.execute("""
+            SELECT id, first_name, last_name, address, email
+            FROM users
+            WHERE id = %s
+            LIMIT 1
+        """, (user_id,))
+        user = cursor.fetchone()
+
+        # If somehow the user record is missing, redirect to login
+        if not user:
+            session.clear()
+            return redirect(url_for("login"))
+
+        # 2) Fetch latest membership/subscription row for this user
+        # We'll show the most recent subscription regardless of status so the user can see Pending/Accepted/Rejected.
+        cursor.execute("""
+            SELECT id, plan, price, payment_method, gcash_proof, status, created_at
+            FROM subscriptions
+            WHERE user_id = %s
+            ORDER BY id DESC
+            LIMIT 1
+        """, (user_id,))
+        sub = cursor.fetchone()
+
+        membership_data = None
+        if sub:
+            created_at = sub.get("created_at")
+            # created_at from mysql connector should already be a datetime object.
+            # If it's None or not a datetime, fall back to now().
+            if not created_at:
+                created_at = datetime.utcnow()
+
+            # NOTE: your subscriptions table does not appear to have an explicit end_date field.
+            # We'll assume a 30-day membership window starting from created_at. If you have different rules,
+            # change the `membership_duration_days` value or add an end_date field to the DB.
+            membership_duration_days = 30
+            end_dt = created_at + timedelta(days=membership_duration_days)
+
+            # days left (floor to 0)
+            days_left = (end_dt.date() - datetime.utcnow().date()).days
+            if days_left < 0:
+                days_left = 0
+
+            membership_data = {
+                "id": sub.get("id"),
+                "plan": sub.get("plan"),
+                "price": sub.get("price"),
+                "payment_method": sub.get("payment_method"),
+                "status": sub.get("status"),
+                "created_at": created_at,
+                # ISO strings for JS usage
+                "end_date": end_dt.strftime("%Y-%m-%d"),
+                "end_date_js": end_dt.strftime("%Y-%m-%dT%H:%M:%S"),
+                "days_left": days_left
+            }
+
+        # 3) Fetch store orders for this user (most recent first)
+        cursor.execute("""
+            SELECT id, product_name, price, payment_method, status, created_at
+            FROM store_orders
+            WHERE user_id = %s
+            ORDER BY created_at DESC
+        """, (user_id,))
+        orders = cursor.fetchall() or []
+
+    except Exception as e:
+        # Log error and show minimal page instead of crashing
+        print("my_account error:", e)
+        # safe defaults
+        user = user if 'user' in locals() and user else {"id": user_id, "first_name": "", "last_name": "", "address": "", "email": session.get("email")}
+        membership_data = membership_data if 'membership_data' in locals() else None
+        orders = orders if 'orders' in locals() else []
+    finally:
+        try:
+            if cursor:
+                cursor.close()
+            if conn:
+                conn.close()
+        except:
+            pass
+
+    # Render the my_account template (you'll need to create templates/my_account.html)
+    return render_template(
+        "my_account.html",
+        user=user,
+        membership=membership_data,
+        orders=orders
+    )
+
 # ---------------- ADMIN DASHBOARD ----------------
 @app.route('/admin_dashboard')
 def admin_dashboard():
