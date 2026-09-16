@@ -1,8 +1,10 @@
 from flask import Flask, render_template, request, redirect, url_for, session, jsonify, flash
 from werkzeug.security import generate_password_hash, check_password_hash
 from werkzeug.utils import secure_filename
-import mysql.connector
-from mysql.connector import Error
+import psycopg2
+import psycopg2.extensions
+from psycopg2 import Error
+from psycopg2.extras import RealDictCursor
 import os
 from datetime import datetime, timedelta
 import random
@@ -17,10 +19,18 @@ app.secret_key = 'your_secret_key_here'
 
 DB_CONFIG = {
     "host": "localhost",
-    "user": "root",
-    "password": "",
+    "port": 5432,
+    "user": "postgres",
+    "password": "secy082222",
     "database": "fight_zone"
 }
+
+class _PgConnection(psycopg2.extensions.connection):
+    """Lets cursor(dictionary=True) keep working, like mysql.connector did."""
+    def cursor(self, *args, **kwargs):
+        if kwargs.pop("dictionary", False):
+            kwargs["cursor_factory"] = RealDictCursor
+        return super().cursor(*args, **kwargs)
 
 # Admin configuration (Option A: Admin by email)
 ADMIN_EMAIL = "admin@fightzone.com"
@@ -28,7 +38,7 @@ ADMIN_PASSWORD = "admin123"
 
 # Email (placeholder - used for OTP sending)
 EMAIL_SENDER = "magalloncynric@gmail.com"
-EMAIL_APP_PASSWORD = "lehb diih shza rmnx"
+EMAIL_APP_PASSWORD = "xpqv wpch sewe zzvf"
 EMAIL_SMTP = "smtp.gmail.com"
 EMAIL_PORT = 465
 
@@ -41,14 +51,14 @@ os.makedirs(UPLOAD_FOLDER, exist_ok=True)
 
 # ---------- DB helper ----------
 def get_db_connection():
-    return mysql.connector.connect(
+    return psycopg2.connect(
         host=DB_CONFIG["host"],
+        port=DB_CONFIG["port"],
         user=DB_CONFIG["user"],
         password=DB_CONFIG["password"],
-        database=DB_CONFIG["database"],
-        auth_plugin='mysql_native_password'
+        dbname=DB_CONFIG["database"],
+        connection_factory=_PgConnection
     )
-
 # ---------- Dev convenience: ensure admin exists ----------
 def ensure_admin():
     """
@@ -416,7 +426,7 @@ def benefits():
 @app.route('/membership')
 def membership():
     if 'user_id' not in session:
-        return redirect(url_for('login'))
+        return redirect(url_for('processing_page', dest='membership'))
 
     user_id = session['user_id']
     status = None
@@ -457,7 +467,7 @@ def membership():
 @app.route('/store')
 def store():
     if 'user_id' not in session:
-        return redirect(url_for('login'))
+        return redirect(url_for('processing_page', dest='store'))
     return render_template('store.html')
 
 
@@ -781,7 +791,8 @@ def pay_gcash():
 def processing_page():
     if 'user_id' not in session:
         return redirect(url_for('login'))
-    return render_template("processing.html")
+    dest = request.args.get('dest', 'membership')
+    return render_template("processing.html", dest=dest)
 
 # ----------------- MEMBERSHIP: PAY BANK (form) -----------------
 @app.route('/pay/bank', methods=['POST'])
@@ -935,7 +946,7 @@ def admin_subscriptions():
             SELECT
                 s.id,
                 s.user_id,
-                CONCAT(IFNULL(u.first_name,''), ' ', IFNULL(u.last_name,'')) AS requester_username,
+                CONCAT(COALESCE(u.first_name,''), ' ', COALESCE(u.last_name,'')) AS requester_username,
                 u.email AS requester_email,
                 s.payment_method,
                 s.plan AS item,
@@ -955,7 +966,7 @@ def admin_subscriptions():
             SELECT
                 o.id,
                 o.user_id,
-                CONCAT(IFNULL(u.first_name,''), ' ', IFNULL(u.last_name,'')) AS requester_username,
+                CONCAT(COALESCE(u.first_name,''), ' ', COALESCE(u.last_name,'')) AS requester_username,
                 u.email AS requester_email,
                 o.payment_method,
                 o.product_name AS item,
@@ -1101,13 +1112,12 @@ def admin_transactions():
         conn = get_db_connection()
         cursor = conn.cursor(dictionary=True)
 
-        # union the two tables, then order by created_at
         cursor.execute("""
             SELECT * FROM (
                 SELECT
                     s.id,
                     s.user_id,
-                    CONCAT(IFNULL(u.first_name,''), ' ', IFNULL(u.last_name,'')) AS username,
+                    CONCAT(COALESCE(u.first_name,''), ' ', COALESCE(u.last_name,'')) AS username,
                     s.payment_method,
                     s.plan AS item,
                     s.price,
@@ -1116,12 +1126,12 @@ def admin_transactions():
                     'membership' AS type,
                     s.created_at
                 FROM subscriptions s
-                JOIN users u ON s.user_id = u.id
+                LEFT JOIN users u ON s.user_id = u.id
                 UNION ALL
                 SELECT
                     o.id,
                     o.user_id,
-                    CONCAT(IFNULL(u.first_name,''), ' ', IFNULL(u.last_name,'')) AS username,
+                    CONCAT(COALESCE(u.first_name,''), ' ', COALESCE(u.last_name,'')) AS username,
                     o.payment_method,
                     o.product_name AS item,
                     o.price,
@@ -1130,7 +1140,7 @@ def admin_transactions():
                     'store' AS type,
                     o.created_at
                 FROM store_orders o
-                JOIN users u ON o.user_id = u.id
+                LEFT JOIN users u ON o.user_id = u.id
             ) AS alltx
             ORDER BY created_at DESC
         """)
@@ -1150,4 +1160,4 @@ def admin_transactions():
 # ---------- App startup ----------
 if __name__ == '__main__':
     ensure_admin()
-    app.run(debug=True)
+    app.run(debug=True, host="127.0.0.1", port=5000)
