@@ -39,11 +39,11 @@ body {
 .logo-box {
     background: #0d0d0d;
     border: 3px solid #ff0000;
-    border-radius: 12px;
+    border-radius: 6px;
     padding: 10px 30px;
     box-shadow:
-        0 0 20px rgba(255, 0, 0, 0.6), /* outer red glow */
-        inset 0 0 10px rgba(255, 0, 0, 0.6); /* inner red line */
+        0 0 20px rgba(255, 0, 0, 0.6),
+        inset 0 0 10px rgba(255, 0, 0, 0.6);
     transition: all 0.3s ease;
     cursor: pointer;
 }
@@ -56,12 +56,12 @@ body {
 }
 
 .logo-text {
-    font-family: 'Bebas Neue', sans-serif;
+    font-family: 'Anton', sans-serif;
     font-size: 1.9rem;
-    color: #fff;
+    color: red;
     letter-spacing: 2px;
     text-transform: uppercase;
-    text-shadow: 0 0 10px rgba(255, 0, 0, 0.7);
+    text-shadow: none;
 }
 
 /* ===== Navigation Buttons (About, Benefits, Membership, Logout) ===== */
@@ -142,12 +142,20 @@ body {
 }
 
 .form-container h2 {
-    color: #ff4444;
-    margin-bottom: 25px;
+    font-family: 'Anton', sans-serif;
+    font-size: 2.2rem;
+    color: red;
+    letter-spacing: 3px;
     text-transform: uppercase;
-    letter-spacing: 1px;
+    text-align: center;
+    padding: 1px 24px;
+    border: 3px solid red;
+    border-radius: 6px;
+    background: rgba(0,0,0,0.6);
+    box-shadow: 0 0 16px red, inset 0 0 8px rgba(255,0,0,0.4);
+    margin-bottom: 25px;
+    display: inline-block;
 }
-
 
 /* Boxy input fields */
 input {
@@ -468,7 +476,7 @@ footer {
     border: 2px solid #ff0000;
     border-radius: 10px;
     padding: 12px 30px;
-    color: white;
+    color: red;
     font-size: 2.2rem;
     font-weight: bold;
     box-shadow: 0 0 20px rgba(255, 0, 0, 0.6);
@@ -1174,4 +1182,37 @@ input[type="file"] {
 
 .order-table tr:nth-child(even) {
     background: #1a1a1a;
+}
+
+/* ===== FINAL LOGO OVERRIDE — matches login page style ===== */
+.logo-box {
+    background: #0d0d0d !important;
+    border: 2px solid #ff0000 !important;
+    border-radius: 6px !important;
+    box-shadow: 0 0 20px rgba(255, 0, 0, 0.6), inset 0 0 10px rgba(255, 0, 0, 0.6) !important;
+}
+
+.logo-text {
+    font-family: 'Anton', sans-serif !important;
+    color: red !important;
+    text-shadow: none !important;
+}
+
+/* ===== FINAL NAVBAR OVERRIDE — matches login page style ===== */
+.top-banner {
+    background: #0d0d0d !important;
+    border-top: 2px solid red !important;
+    box-shadow: 0 0 20px red !important;
+}
+
+.logout {
+    background: #0d0d0d !important;
+    color: red !important;
+    border: 2px solid #ff0000 !important;
+    box-shadow: 0 0 10px rgba(255, 0, 0, 0.5), inset 0 0 8px rgba(255, 0, 0, 0.4) !important;
+}
+
+.logout:hover {
+    background: #ff0000 !important;
+    color: black !important;
 }
