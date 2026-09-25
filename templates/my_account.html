@@ -64,7 +64,7 @@
 
         </div>
         {% else %}
-            <p>No membership found.</p>
+            <p>No membership activated.</p>
         {% endif %}
     </div>
 
@@ -87,8 +87,16 @@
                     {% if order.status == "Pending" %}
                         ⏳ Pending
                     {% elif order.status == "Accepted" %}
-                        {% set deliver_date = order.delivery_date %}
-                        📦 To be delivered on {{ order.delivery_date }} to {{ user.address }}
+                     {% if order.is_delivered %}
+                     <p>📦 Order Delivered to {{ user.address }}</p>
+                    <form method="POST" action="{{ url_for('confirm_order_received', order_id=order.id) }}">
+                     <button type="submit" class="confirm-received-btn">Order Received</button>
+                    </form>
+                     {% else %}
+                      📦 To be delivered on {{ order.delivery_date }} to {{ user.address }}
+                    {% endif %}
+                    {% elif order.status == "Completed" %}
+                         ✅ Order Received
                     {% elif order.status == "Rejected" %}
                         ❌ Rejected{% if order.status_message %} – {{ order.status_message }}{% endif %}
                     {% elif order.status == "packed" %}
@@ -147,6 +155,22 @@
     0% { box-shadow: 0 0 5px #ff0000, 0 0 10px #ff4d4d; }
     50% { box-shadow: 0 0 10px #ff0000, 0 0 20px #ff4d4d; }
     100% { box-shadow: 0 0 5px #ff0000, 0 0 10px #ff4d4d; }
+}
+
+.confirm-received-btn {
+    margin-top: 8px;
+    padding: 8px 16px;
+    background: #ff0000;
+    color: black;
+    font-weight: bold;
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
+    transition: 0.2s;
+}
+.confirm-received-btn:hover {
+    background: #ff4444;
+    transform: scale(1.03);
 }
 </style>
 

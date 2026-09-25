@@ -47,7 +47,11 @@
                 <td>{{ user.last_name }}</td>
                 <td>{{ user.address }}</td>
                 <td>{{ user.email }}</td>
-                <td class="password-cell">{{ user.password }}</td>
+                <td class="password-cell">
+                <span class="pw-masked">••••••••</span>
+              <span class="pw-real" style="display:none;">{{ user.password }}</span>
+              <button type="button" class="pw-toggle-btn" onclick="togglePassword(this)">👁️</button>
+                </td>
                 <td>
                     <button class="action-btn edit-btn" onclick="openEditUser({{ user.id }})">Edit</button>
                     <button class="action-btn delete-btn" onclick="openDeleteConfirm({{ user.id }})">Delete</button>
@@ -328,6 +332,18 @@ document.getElementById("searchInput")?.addEventListener("keyup", () => {
         row.style.display = row.innerText.toLowerCase().includes(term) ? "" : "none";
     });
 });
+
+/* PASSWORD TOGGLE */
+function togglePassword(btn) {
+    const cell = btn.closest('.password-cell');
+    const masked = cell.querySelector('.pw-masked');
+    const real = cell.querySelector('.pw-real');
+
+    const isHidden = real.style.display === 'none';
+    real.style.display = isHidden ? 'inline' : 'none';
+    masked.style.display = isHidden ? 'none' : 'inline';
+    btn.textContent = isHidden ? '🙈' : '👁️';
+}
 </script>
 
 {% endblock %}

@@ -1216,3 +1216,31 @@ input[type="file"] {
     background: #ff0000 !important;
     color: black !important;
 }
+
+.password-cell {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    white-space: normal;
+    word-break: break-all;
+    max-width: 220px;
+}
+
+.pw-real {
+    font-family: monospace;
+    font-size: 12px;
+}
+
+.pw-toggle-btn {
+    background: none;
+    border: none;
+    cursor: pointer;
+    font-size: 16px;
+    padding: 0;
+    flex-shrink: 0;
+}
+
+.pw-toggle-btn:hover {
+    transform: scale(1.15);
+}

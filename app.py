@@ -545,11 +545,12 @@ def my_account():
         # --- PATCH: compute delivery_date ---
         for o in orders:
             if o.get('status') == "Accepted" and o.get('created_at'):
-                o['delivery_date'] = (o['created_at'] + timedelta(days=2)).strftime("%Y-%m-%d")
+                deliver_dt = o['created_at'] + timedelta(days=2)
+                o['delivery_date'] = deliver_dt.strftime("%Y-%m-%d")
+                o['is_delivered'] = datetime.utcnow() >= deliver_dt
             else:
                 o['delivery_date'] = "TBD"
-
-
+                o['is_delivered'] = False
 
 
     except Exception as e:
@@ -572,6 +573,33 @@ def my_account():
         membership=membership_data,
         orders=orders
     )
+
+
+
+@app.route('/order/confirm_received/<int:order_id>', methods=['POST'])
+def confirm_order_received(order_id):
+    if 'user_id' not in session:
+        return redirect(url_for('login'))
+
+    user_id = session['user_id']
+    try:
+        conn = get_db_connection()
+        cursor = conn.cursor()
+        cursor.execute("""
+            UPDATE store_orders SET status = %s
+            WHERE id = %s AND user_id = %s AND status = 'Accepted'
+        """, ('Completed', order_id, user_id))
+        conn.commit()
+    except Error as e:
+        print("confirm_order_received DB error:", e)
+    finally:
+        try:
+            cursor.close()
+            conn.close()
+        except:
+            pass
+
+    return redirect(url_for('my_account'))
 
 
 # ---------------- ADMIN DASHBOARD ----------------
