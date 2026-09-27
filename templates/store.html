@@ -93,121 +93,36 @@
 </section>
 
 <!-- ============================
-      PAYMENT CHOICE POPUP
+      PAYMENT POPUP
 =============================== -->
 <div id="paymentPopup" class="popup-overlay">
     <div class="popup-box">
         <h3 id="storePopupTitle" class="popup-header"></h3>
         <p>Select a payment method:</p>
 
-        <button class="payment-option-btn" onclick="openStoreGCash()">G-Cash</button>
-        <button class="payment-option-btn" onclick="openStoreBankStep1()">Online Bank</button>
+        <button class="payment-option-btn" onclick="openStoreQR('GCASH')">G-Cash</button>
+        <button class="payment-option-btn" onclick="openStoreQR('PAYMAYA')">PayMaya</button>
 
         <button class="close-btn" onclick="closeAllPopups()">Cancel</button>
     </div>
 </div>
 
 <!-- ============================
-      STORE G-CASH POPUP
+      Store QR POPUP
 =============================== -->
-<div id="storeGCashPopup" class="popup-overlay">
+<div id="storeQRPopup" class="popup-overlay">
     <div class="popup-box">
-        <h3 class="popup-header">Please scan QR via G-CASH</h3>
+        <h3 class="popup-header" id="storeQRHeader">Please scan QR</h3>
 
-        <img src="{{ url_for('static', filename='images/gcash.jpg') }}" class="qr-image">
+        <img id="storeQRImage" src="" class="qr-image">
 
         <form method="POST" enctype="multipart/form-data" action="{{ url_for('store_pay') }}">
             <input type="hidden" id="storeProduct" name="product_name">
             <input type="hidden" id="storePrice" name="price">
-            <input type="hidden" name="payment_method" value="GCASH">
+            <input type="hidden" id="storeMethod" name="payment_method">
 
             <label>Please upload your receipt for verification:</label>
-            <input type="file" name="gcash_proof" accept=".jpg,.png,.pdf" required>
-
-            <button class="proceed-btn" type="submit">Proceed</button>
-        </form>
-
-        <button class="close-btn" onclick="closeAllPopups()">Cancel</button>
-    </div>
-</div>
-
-<!-- ============================
-      STORE BANK STEP 1 POPUP (Choose Bank)
-=============================== -->
-<div id="storeBankStep1Popup" class="popup-overlay">
-    <div class="popup-box">
-        <h3 class="popup-header">Select Bank</h3>
-
-        <button class="payment-option-btn" onclick="openStoreBankStep2('GoTyme')">GoTyme</button>
-        <button class="payment-option-btn" onclick="openStoreBankStep2('Union Bank')">Union Bank</button>
-
-        <button class="close-btn" onclick="closeAllPopups()">Cancel</button>
-    </div>
-</div>
-
-<!-- ============================
-      STORE BANK STEP 2 POPUP (QR or Card Input)
-=============================== -->
-<div id="storeBankStep2Popup" class="popup-overlay">
-    <div class="popup-box">
-        <h3 id="storeBankSelectedTitle" class="popup-header"></h3>
-        <p>Select payment type:</p>
-
-        <button class="payment-option-btn" onclick="openStoreBankQR()">QR Payment</button>
-        <button class="payment-option-btn" onclick="openStoreBankCard()">Input Card Details</button>
-
-        <button class="close-btn" onclick="closeAllPopups()">Cancel</button>
-    </div>
-</div>
-
-<!-- ============================
-      STORE BANK QR POPUP
-=============================== -->
-<div id="storeBankQRPopup" class="popup-overlay">
-    <div class="popup-box">
-        <h3 class="popup-header">Scan QR via Bank</h3>
-
-        <img src="{{ url_for('static', filename='images/gcash.jpg') }}" class="qr-image">
-
-        <form method="POST" enctype="multipart/form-data" action="{{ url_for('store_pay') }}">
-            <input type="hidden" id="storeProductQR" name="product_name">
-            <input type="hidden" id="storePriceQR" name="price">
-            <input type="hidden" id="storeBankQRName" name="bank_name">
-            <input type="hidden" name="payment_method" value="BANK">
-            <input type="hidden" name="payment_type" value="QR">
-
-            <label>Please upload your receipt for verification:</label>
-            <input type="file" name="bank_proof" accept=".jpg,.png,.pdf" required>
-
-            <button class="proceed-btn" type="submit">Proceed</button>
-        </form>
-
-        <button class="close-btn" onclick="closeAllPopups()">Cancel</button>
-    </div>
-</div>
-
-<!-- ============================
-      STORE BANK CARD INPUT POPUP
-=============================== -->
-<div id="storeBankCardPopup" class="popup-overlay">
-    <div class="popup-box">
-        <h3 class="popup-header">Enter Card Details</h3>
-
-        <form method="POST" action="{{ url_for('store_pay') }}">
-            <input type="hidden" id="storeProductCard" name="product_name">
-            <input type="hidden" id="storePriceCard" name="price">
-            <input type="hidden" id="storeBankCardName" name="bank_name">
-            <input type="hidden" name="payment_method" value="BANK">
-            <input type="hidden" name="payment_type" value="CARD">
-
-            <label>Full Account Name:</label>
-            <input type="text" name="fullname" required>
-
-            <label>Card Number (16 digits):</label>
-            <input type="text" maxlength="16" pattern="[0-9]{16}" name="card_number" required>
-
-            <label>CVV (3 digits):</label>
-            <input type="text" maxlength="3" pattern="[0-9]{3}" name="cvv" required>
+            <input type="file" name="payment_proof" accept=".jpg,.png,.pdf" required>
 
             <button class="proceed-btn" type="submit">Proceed</button>
         </form>
@@ -217,75 +132,39 @@
 </div>
 
 <script>
-// STORE PAYMENT VARIABLES
 let storeProduct = "";
 let storePrice = "";
-let storeBankSelected = "";
 
-// OPEN STORE PAYMENT
 function openPayment(product, price) {
     storeProduct = product;
     storePrice = price;
-
-    document.getElementById("storePopupTitle").innerText =
-        `Buy ${product} — ₱${price}`;
-
+    document.getElementById("storePopupTitle").innerText = `Buy ${product} — ₱${price}`;
     document.getElementById("paymentPopup").style.display = "flex";
 }
 
-// OPEN STORE GCASH
-function openStoreGCash() {
+function openStoreQR(method) {
     document.getElementById("paymentPopup").style.display = "none";
 
-    document.getElementById("storeProduct").value = storeProduct;
-    document.getElementById("storePrice").value = storePrice;
+    const qrImage = document.getElementById('storeQRImage');
+    const qrHeader = document.getElementById('storeQRHeader');
 
-    document.getElementById("storeGCashPopup").style.display = "flex";
+    if (method === 'PAYMAYA') {
+        qrImage.src = "{{ url_for('static', filename='images/gcash.jpg') }}";
+        qrHeader.innerText = "Please scan QR via PayMaya";
+    } else {
+        qrImage.src = "{{ url_for('static', filename='images/gcash.jpg') }}";
+        qrHeader.innerText = "Please scan QR via G-CASH";
+    }
+
+    document.getElementById('storeProduct').value = storeProduct;
+    document.getElementById('storePrice').value = storePrice;
+    document.getElementById('storeMethod').value = method;
+
+    document.getElementById('storeQRPopup').style.display = "flex";
 }
 
-// STEP 1: CHOOSE BANK
-function openStoreBankStep1() {
-    document.getElementById("paymentPopup").style.display = "none";
-    document.getElementById("storeBankStep1Popup").style.display = "flex";
-}
-
-// STEP 2: BANK SELECTED
-function openStoreBankStep2(bankName) {
-    storeBankSelected = bankName;
-    document.getElementById("storeBankStep1Popup").style.display = "none";
-
-    document.getElementById("storeBankSelectedTitle").innerText =
-        `Bank: ${bankName}`;
-
-    document.getElementById("storeBankStep2Popup").style.display = "flex";
-}
-
-// BANK QR PAYMENT
-function openStoreBankQR() {
-    document.getElementById("storeBankStep2Popup").style.display = "none";
-
-    document.getElementById("storeProductQR").value = storeProduct;
-    document.getElementById("storePriceQR").value = storePrice;
-    document.getElementById("storeBankQRName").value = storeBankSelected;
-
-    document.getElementById("storeBankQRPopup").style.display = "flex";
-}
-
-// BANK CARD PAYMENT
-function openStoreBankCard() {
-    document.getElementById("storeBankStep2Popup").style.display = "none";
-
-    document.getElementById("storeProductCard").value = storeProduct;
-    document.getElementById("storePriceCard").value = storePrice;
-    document.getElementById("storeBankCardName").value = storeBankSelected;
-
-    document.getElementById("storeBankCardPopup").style.display = "flex";
-}
-
-// CLOSE ALL POPUPS
 function closeAllPopups() {
-    document.querySelectorAll(".popup-overlay")
-        .forEach(p => p.style.display = "none");
+    document.querySelectorAll(".popup-overlay").forEach(p => p.style.display = "none");
 }
 </script>
 

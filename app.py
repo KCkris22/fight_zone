@@ -426,28 +426,50 @@ def benefits():
 @app.route('/membership')
 def membership():
     if 'user_id' not in session:
-        return redirect(url_for('processing_page', dest='membership'))
+        return redirect(url_for('login'))
 
     user_id = session['user_id']
     status = None
     popup_message = None
+    active_until = None
 
     try:
         conn = get_db_connection()
         cursor = conn.cursor(dictionary=True)
 
+        # Most recent subscription request (any status)
         cursor.execute("""
-            SELECT id, status, status_message
+            SELECT id, status, status_message, created_at
             FROM subscriptions
             WHERE user_id = %s
             ORDER BY id DESC
             LIMIT 1
         """, (user_id,))
-        row = cursor.fetchone()
+        latest = cursor.fetchone()
 
-        if row:
-            status = row.get('status')
-            popup_message = row.get('status_message')
+        # Most recent ACCEPTED subscription, to check if it's still active
+        cursor.execute("""
+            SELECT created_at
+            FROM subscriptions
+            WHERE user_id = %s AND status = 'Accepted'
+            ORDER BY id DESC
+            LIMIT 1
+        """, (user_id,))
+        accepted = cursor.fetchone()
+
+        if accepted:
+            end_dt = accepted['created_at'] + timedelta(days=30)
+            if datetime.utcnow() < end_dt:
+                active_until = end_dt.strftime("%Y-%m-%d")
+
+        if latest:
+            # If a membership is still active and the newest request is just a Pending renewal,
+            # show "Active" instead of "Pending" so it doesn't look like nothing is active.
+            if active_until and latest.get('status') == 'Pending':
+                status = 'Active'
+            else:
+                status = latest.get('status')
+                popup_message = latest.get('status_message')
     except Exception as e:
         print("membership fetch error:", e)
     finally:
@@ -461,7 +483,8 @@ def membership():
         'membership.html',
         username=session.get('username'),
         status=status,
-        popup_message=popup_message
+        popup_message=popup_message,
+        active_until=active_until
     )
 
 @app.route('/store')
@@ -777,6 +800,7 @@ def pay_gcash():
     user_id = session['user_id']
     plan = request.form.get('plan')
     price = request.form.get('price')
+    method = request.form.get('payment_method', 'GCASH')
 
     file = request.files.get('payment_proof')
     if not file:
@@ -799,7 +823,7 @@ def pay_gcash():
         cursor.execute("""
             INSERT INTO subscriptions (user_id, plan, price, payment_method, gcash_proof, status, created_at)
             VALUES (%s, %s, %s, %s, %s, %s, %s)
-        """, (user_id, plan, price, "GCASH", filename, "Pending", datetime.now()))
+        """, (user_id, plan, price, method, filename, "Pending", datetime.now()))
         conn.commit()
     except Error as e:
         print("pay_gcash DB error:", e)
@@ -812,7 +836,7 @@ def pay_gcash():
         except:
             pass
 
-    return redirect(url_for('processing_page'))
+    return redirect(url_for('processing_page', dest='membership'))
 
 # ----- PROCESSING page (loading) -----
 @app.route('/processing')
@@ -821,52 +845,6 @@ def processing_page():
         return redirect(url_for('login'))
     dest = request.args.get('dest', 'membership')
     return render_template("processing.html", dest=dest)
-
-# ----------------- MEMBERSHIP: PAY BANK (form) -----------------
-@app.route('/pay/bank', methods=['POST'])
-def pay_bank():
-    if 'user_id' not in session:
-        return redirect(url_for('login'))
-
-    plan = request.form.get('plan')
-    price = request.form.get('price')
-    fullname = request.form.get('fullname')
-    card_number = request.form.get('card_number')
-    cvv = request.form.get('cvv')
-
-    try:
-        conn = get_db_connection()
-        cursor = conn.cursor()
-
-        sql = """
-            INSERT INTO subscriptions (user_id, plan, price, payment_method, gcash_proof, status, created_at)
-            VALUES (%s, %s, %s, %s, %s, %s, %s)
-        """
-        cursor.execute(sql, (
-            session['user_id'],
-            plan,
-            price,
-            "BANK",
-            None,
-            "Pending",
-            datetime.now()
-        ))
-
-        conn.commit()
-
-    except Exception as e:
-        print("pay_bank ERROR:", e)
-        return redirect(url_for('membership', status="error"))
-
-    finally:
-        try:
-            cursor.close()
-            conn.close()
-        except:
-            pass
-
-    # ⭐ Send user to processing loading screen
-    return redirect(url_for('processing_page'))
 
 # ----------------- STORE PAY -----------------
 @app.route('/store/pay', methods=['POST'])
@@ -883,45 +861,42 @@ def store_pay():
         flash("Invalid order data.", "error")
         return redirect(url_for('store'))
 
-    gcash_proof_filename = None
-    card_number = None
-    cvv = None
-
-    # ==========================
-    # GCASH PAYMENT HANDLING
-    # ==========================
-    if method == "GCASH":
-        file = request.files.get('gcash_proof')
-
-        if not file or file.filename == "":
-            flash("Please upload your G-Cash payment proof.", "error")
-            return redirect(url_for('store'))
-
-        filename = secure_filename(file.filename)
-        gcash_proof_filename = f"{user_id}_{int(__import__('time').time())}_{filename}"
-
-        try:
-            file.save(os.path.join(UPLOAD_FOLDER, gcash_proof_filename))
-        except Exception as e:
-            print("GCash upload error:", e)
-            flash("Failed to save payment proof.", "error")
-            return redirect(url_for('store'))
-
-    # ==========================
-    # BANK PAYMENT HANDLING
-    # ==========================
-    elif method == "BANK":
-        card_number = request.form.get('card_number')
-        cvv = request.form.get('cvv')
-
-        if not card_number or not cvv:
-            flash("Bank information incomplete.", "error")
-            return redirect(url_for('store'))
-
-    # Unknown method
-    else:
-        flash("Invalid payment method.", "error")
+    file = request.files.get('payment_proof')
+    if not file or file.filename == "":
+        flash("Please upload your payment proof.", "error")
         return redirect(url_for('store'))
+
+    filename = secure_filename(file.filename)
+    proof_filename = f"{user_id}_{int(__import__('time').time())}_{filename}"
+
+    try:
+        file.save(os.path.join(UPLOAD_FOLDER, proof_filename))
+    except Exception as e:
+        print("Payment proof upload error:", e)
+        flash("Failed to save payment proof.", "error")
+        return redirect(url_for('store'))
+
+    try:
+        conn = get_db_connection()
+        cursor = conn.cursor()
+        cursor.execute("""
+            INSERT INTO store_orders
+                (user_id, product_name, price, payment_method, gcash_proof, status, created_at)
+            VALUES (%s, %s, %s, %s, %s, %s, %s)
+        """, (user_id, product, price, method, proof_filename, "Pending", datetime.now()))
+        conn.commit()
+    except Error as e:
+        print("store_pay DB error:", e)
+        flash("Database error. Please try again.", "error")
+        return redirect(url_for('store'))
+    finally:
+        try:
+            cursor.close()
+            conn.close()
+        except:
+            pass
+
+    return redirect(url_for('processing_page', dest='store'))
 
     # ==========================
     # SAVE ORDER TO DATABASE
