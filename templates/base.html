@@ -17,12 +17,18 @@
             <a href="{{ url_for('home') }}" class="logo-text"> FightZone </a>
         </div>
         <nav class="nav-links">
-            <a href="{{ url_for('my_account') }}" class="nav-btn my-account-link">My Account</a>
-            <a href="{{ url_for('about') }}" class="nav-btn">About</a>
-            <a href="{{ url_for('benefits') }}" class="nav-btn">Benefits</a>
-            <a href="{{ url_for('membership') }}" class="nav-btn">Membership</a>
-            <a href="{{ url_for('store') }}" class="nav-btn">Store</a>
-            <a href="{{ url_for('logout') }}" class="nav-btn logout">Logout</a>
+    <a href="{{ url_for('about') }}" class="nav-btn">About</a>
+    <a href="{{ url_for('benefits') }}" class="nav-btn">Benefits</a>
+    <a href="{{ url_for('membership') }}" class="nav-btn">Membership</a>
+    <a href="{{ url_for('store') }}" class="nav-btn">Store</a>
+
+    <div class="settings-dropdown">
+        <button type="button" class="nav-btn settings-btn" id="settingsToggle">⚙️</button>
+        <div class="settings-menu" id="settingsMenu">
+            <a href="{{ url_for('my_account') }}" class="settings-item my-account-link">My Account</a>
+            <a href="{{ url_for('logout') }}" class="settings-item logout-item">Logout</a>
+        </div>
+        </div>
         </nav>
     </header>
     {% endif %}
@@ -85,6 +91,24 @@
     });
 
 })();
+
+/* SETTINGS DROPDOWN TOGGLE */
+(function(){
+    const toggle = document.getElementById("settingsToggle");
+    const menu = document.getElementById("settingsMenu");
+    if (!toggle || !menu) return;
+
+    toggle.addEventListener("click", function(e){
+        e.stopPropagation();
+        menu.classList.toggle("open");
+    });
+
+    document.addEventListener("click", function(e){
+        if (!menu.contains(e.target) && e.target !== toggle) {
+            menu.classList.remove("open");
+        }
+    });
+})();
 </script>
 
 <style>
@@ -115,6 +139,84 @@
     0% { box-shadow: 0 0 5px #ff0000, 0 0 10px #ff4d4d, 0 0 15px #ff6666; }
     50% { box-shadow: 0 0 10px #ff0000, 0 0 20px #ff4d4d, 0 0 30px #ff6666; }
     100% { box-shadow: 0 0 5px #ff0000, 0 0 10px #ff4d4d, 0 0 15px #ff6666; }
+}
+
+/* SETTINGS DROPDOWN */
+.settings-dropdown {
+    position: relative;
+    display: inline-block;
+    margin-left: 15px;
+}
+
+.settings-btn {
+    margin-left: 5px;
+    padding: 8px 14px;
+    background: #0d0d0d;
+    border: 2px solid #ff0000;
+    box-shadow: 0 0 10px rgba(255, 0, 0, 0.5), inset 0 0 8px rgba(255, 0, 0, 0.4);
+    font-size: 18px;
+    cursor: pointer;
+    transition: 0.3s ease;
+}
+
+.settings-btn:hover {
+    background: #ff0000;
+    transform: scale(1.08);
+    box-shadow: 0 0 20px red;
+}
+
+.settings-menu {
+    display: none;
+    position: absolute;
+    top: calc(100% + 10px);
+    right: 0;
+    background: #0d0d0d;
+    border: 2px solid #ff0000;
+    border-radius: 8px;
+    box-shadow: 0 0 20px rgba(255, 0, 0, 0.6), inset 0 0 10px rgba(255, 0, 0, 0.4);
+    min-width: 180px;
+    overflow: hidden;
+    z-index: 1500;
+    animation: dropIn 0.2s ease-out;
+}
+
+.settings-menu.open {
+    display: block;
+}
+
+.settings-item {
+    display: block;
+    padding: 12px 18px;
+    color: white;
+    text-decoration: none;
+    font-weight: bold;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    border-bottom: 1px solid rgba(255, 0, 0, 0.3);
+    transition: 0.2s ease;
+}
+
+.settings-item:last-child {
+    border-bottom: none;
+}
+
+.settings-item:hover {
+    background: #ff0000;
+    color: black;
+}
+
+.logout-item {
+    color: #ff6666;
+}
+
+.logout-item:hover {
+    background: #ff0000;
+    color: white;
+}
+
+@keyframes dropIn {
+    from { opacity: 0; transform: translateY(-8px); }
+    to { opacity: 1; transform: translateY(0); }
 }
 </style>
 
