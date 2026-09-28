@@ -558,19 +558,21 @@ def my_account():
 
         # Fetch store orders
         cursor.execute("""
-            SELECT id, product_name AS item, price, payment_method, status, created_at
-            FROM store_orders
-            WHERE user_id = %s
-            ORDER BY created_at DESC
+        SELECT id, product_name AS item, price, payment_method, status,
+        status_message, created_at, accepted_at
+        FROM store_orders
+        WHERE user_id = %s
+        ORDER BY created_at DESC
         """, (user_id,))
         orders = cursor.fetchall() or []
 
         # --- PATCH: compute delivery_date ---
         for o in orders:
-            if o.get('status') == "Accepted" and o.get('created_at'):
-                deliver_dt = o['created_at'] + timedelta(days=2)
+            if o.get('status') == "Accepted":
+                base = o.get('accepted_at') or o.get('created_at')
+                deliver_dt = base + timedelta(days=2)
                 o['delivery_date'] = deliver_dt.strftime("%Y-%m-%d")
-                o['is_delivered'] = datetime.utcnow() >= deliver_dt
+                o['is_delivered'] = datetime.now() >= deliver_dt
             else:
                 o['delivery_date'] = "TBD"
                 o['is_delivered'] = False
@@ -1004,13 +1006,26 @@ def admin_accept(typ, id):
         return redirect(url_for('login'))
 
     message = "✅ Your payment has been accepted!"
-    try:
-        if typ == 'membership':
-            update_status('subscriptions', id, 'Accepted', message)
-        elif typ == 'store':
-            update_status('store_orders', id, 'Accepted', message)
-    except Error as e:
-        print("admin_accept error:", e)
+    if typ == 'membership':
+        update_status('subscriptions', id, 'Accepted', message)
+    elif typ == 'store':
+        update_status('store_orders', id, 'Accepted', message)
+        conn = None
+        cursor = None
+        try:
+            conn = get_db_connection()
+            cursor = conn.cursor()
+            cursor.execute("UPDATE store_orders SET accepted_at = %s WHERE id = %s",
+                           (datetime.now(), id))
+            conn.commit()
+        except Error as e:
+            print("admin_accept accepted_at error:", e)
+        finally:
+            try:
+                if cursor: cursor.close()
+                if conn: conn.close()
+            except:
+                pass
 
     return redirect(url_for('admin_subscriptions'))
 
@@ -1080,25 +1095,34 @@ def edit_subscription_post():
     if 'user_id' not in session or session.get('email', '').lower() != ADMIN_EMAIL.lower():
         return redirect(url_for('login'))
 
-    sub_id = request.form.get('id')
-    plan = request.form.get('plan')
+    item_id = request.form.get('id')
+    typ = request.form.get('type')
+    name = request.form.get('plan')
     price = request.form.get('price')
     status = request.form.get('status')
 
+    # Only these two fixed pairs are ever used in the query
+    if typ == 'store':
+        table, name_col = 'store_orders', 'product_name'
+    else:
+        table, name_col = 'subscriptions', 'plan'
+
+    conn = None
+    cursor = None
     try:
         conn = get_db_connection()
         cursor = conn.cursor()
-        cursor.execute("""
-            UPDATE subscriptions SET plan = %s, price = %s, status = %s
-            WHERE id = %s
-        """, (plan, price, status, sub_id))
+        cursor.execute(
+            f"UPDATE {table} SET {name_col} = %s, price = %s, status = %s WHERE id = %s",
+            (name, price, status, item_id)
+        )
         conn.commit()
     except Error as e:
         print("edit_subscription_post DB error:", e)
     finally:
         try:
-            cursor.close()
-            conn.close()
+            if cursor: cursor.close()
+            if conn: conn.close()
         except:
             pass
 
